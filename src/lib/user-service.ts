@@ -68,7 +68,31 @@ export async function registerUser(input: RegisterInput) {
   };
 }
 
+export async function ensureBuiltinAdmin() {
+  const admin = getSupabaseAdmin();
+  const adminPassword = process.env.ADMIN_PASSWORD ?? "12345678";
+
+  const { error } = await admin.from("users").upsert(
+    {
+      username: "admin",
+      password_hash: hashPassword(adminPassword),
+      display_name: "管理员",
+      role: "admin",
+      status: "active",
+    },
+    { onConflict: "username" },
+  );
+
+  if (error) {
+    throw error;
+  }
+}
+
 export async function verifyUserLogin(username: string, password: string) {
+  if (username === "admin") {
+    await ensureBuiltinAdmin();
+  }
+
   const admin = getSupabaseAdmin();
   const { data, error } = await admin
     .from("users")
