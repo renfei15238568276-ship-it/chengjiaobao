@@ -27,14 +27,14 @@ const plans = [
 
 const payQRCodes = [
   {
-    title: "微信支付",
+    title: "支付宝支付",
     image: "/payments/wechat.jpg",
-    hint: "请使用微信扫码付款，付款时备注“成交宝+手机号”。",
+    hint: "请使用支付宝扫码付款，付款时备注“成交宝+手机号”。",
   },
   {
-    title: "支付宝支付",
+    title: "微信支付",
     image: "/payments/alipay.jpg",
-    hint: "请使用支付宝扫码付款，付款时备注“成交宝+手机号”。",
+    hint: "请使用微信扫码付款，付款时备注“成交宝+手机号”。",
   },
 ];
 
