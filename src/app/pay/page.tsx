@@ -92,10 +92,10 @@ export default function PayPage() {
         <section className="mt-10 rounded-[28px] border border-white/10 bg-white/5 p-6">
           <h3 className="text-2xl font-semibold">开通说明</h3>
           <ul className="mt-5 grid gap-3 text-sm leading-7 text-white/70">
-            <li>1. 先扫码付款，再提交开通信息。</li>
-            <li>2. 正常情况下 5~30 分钟内完成核对并开通。</li>
-            <li>3. 当前版本先不接自动支付回调，先跑通收钱和人工开通流程。</li>
-            <li>4. 后续公网稳定后，再把这一页升级成正式在线支付页。</li>
+            <li>1. 先扫码付款，再填写下方信息并保存付款截图。</li>
+            <li>2. 当前 Vercel 演示版不做服务器写库，先保证收款页稳定可打开、不报错。</li>
+            <li>3. 实际开通先走人工核对，正常 5~30 分钟内处理。</li>
+            <li>4. 后续接入数据库或表单服务后，再升级成正式在线提交版。</li>
           </ul>
         </section>
       </section>
