@@ -1,6 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
-import { SubscriptionGuardCard } from "@/components/subscription-guard-card";
 import { ProtectedShell } from "@/components/protected-shell";
 import { listCustomers } from "@/lib/customer-service";
 import { hasActiveSubscription } from "@/lib/subscription-service";
@@ -27,7 +27,12 @@ const generators = [
 
 export default async function AiPage() {
   const active = await hasActiveSubscription();
-  const customers = active ? await listCustomers() : [];
+
+  if (!active) {
+    redirect("/pay");
+  }
+
+  const customers = await listCustomers();
 
   return (
     <ProtectedShell>
@@ -42,7 +47,7 @@ export default async function AiPage() {
         </>
       }
     >
-      {active ? <AiWorkbench customers={customers} /> : <SubscriptionGuardCard title="当前账号还不能使用 AI 助手" description="先去付款开通套餐，开通后才能生成并保存 AI 话术。" />}
+      <AiWorkbench customers={customers} />
 
       <section className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {generators.map((item) => (

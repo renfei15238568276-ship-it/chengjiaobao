@@ -22,7 +22,7 @@ export async function ProtectedShell({ children }: { children: ReactNode }) {
           </div>
           <div className="flex items-center gap-3 text-sm">
             <Link href="/dashboard" className="rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:bg-slate-50">控制台</Link>
-            <Link href="/payments" className="rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:bg-slate-50">收款审核</Link>
+            {session?.role === "admin" ? <Link href="/payments" className="rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:bg-slate-50">收款审核</Link> : null}
             <Link href="/settings" className="rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:bg-slate-50">设置</Link>
             <form action={logoutAction}>
               <button className="rounded-full bg-slate-950 px-4 py-2 text-white transition hover:bg-slate-800">退出</button>
