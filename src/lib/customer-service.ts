@@ -1,9 +1,43 @@
 import type { CreateCustomerInput, UpdateCustomerInput } from "@/lib/customer-schemas";
 import type { AddFollowUpInput, SaveAiRecordInput } from "@/lib/followup-schemas";
-import { readCustomers, writeCustomers } from "@/lib/store";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import type { CustomerRecord, FollowUpRecord } from "@/lib/types";
 
 export type CustomerDetail = CustomerRecord;
+
+type UserRow = { id: string };
+type CustomerRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  company: string;
+  contact_handle: string;
+  source: string;
+  stage: string;
+  owner: string;
+  next_follow_up: string;
+  probability: number;
+  estimated_amount: string;
+  tags: string[] | null;
+  note: string;
+  created_at: string;
+};
+
+type FollowUpRow = {
+  id: string;
+  customer_id: string;
+  type: string;
+  content: string;
+  created_at: string;
+};
+
+type AiHistoryRow = {
+  id: string;
+  customer_id: string | null;
+  type: string;
+  content: string;
+  created_at: string;
+};
 
 function estimateProbability(stage: string) {
   switch (stage) {
@@ -33,94 +67,252 @@ function formatCurrency(input: string) {
   return `¥${amount.toLocaleString("zh-CN")}`;
 }
 
-function nowLabel() {
+function nowLabelFromDate(input: string) {
   return new Intl.DateTimeFormat("zh-CN", {
     month: "numeric",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-  }).format(new Date());
+  }).format(new Date(input));
 }
 
-function makeRecord(type: string, content: string): FollowUpRecord {
+async function getOrCreateDemoUserId() {
+  const admin = getSupabaseAdmin();
+
+  const { error: upsertError } = await admin.from("users").upsert(
+    {
+      username: "admin",
+      password_hash: "temp-hash",
+      display_name: "管理员",
+      role: "admin",
+      status: "active",
+    },
+    { onConflict: "username" },
+  );
+
+  if (upsertError) {
+    throw upsertError;
+  }
+
+  const { data: existing, error: findError } = await admin
+    .from("users")
+    .select("id")
+    .eq("username", "admin")
+    .limit(1)
+    .single<UserRow>();
+
+  if (findError || !existing) {
+    throw findError ?? new Error("Failed to load demo user");
+  }
+
+  return existing.id;
+}
+
+function mapFollowUp(row: FollowUpRow): FollowUpRecord {
   return {
-    id: `${type}_${Date.now()}`,
-    at: nowLabel(),
-    type,
-    content,
+    id: row.id,
+    at: nowLabelFromDate(row.created_at),
+    type: row.type,
+    content: row.content,
   };
+}
+
+function mapAiHistory(row: AiHistoryRow): FollowUpRecord {
+  return {
+    id: row.id,
+    at: nowLabelFromDate(row.created_at),
+    type: row.type,
+    content: row.content,
+  };
+}
+
+function mapCustomer(
+  customer: CustomerRow,
+  followUps: FollowUpRow[],
+  aiHistory: AiHistoryRow[],
+): CustomerRecord {
+  return {
+    id: customer.id,
+    name: customer.name,
+    company: customer.company,
+    contactHandle: customer.contact_handle,
+    source: customer.source,
+    stage: customer.stage,
+    owner: customer.owner,
+    nextFollowUp: customer.next_follow_up,
+    probability: customer.probability,
+    estimatedAmount: customer.estimated_amount,
+    tags: customer.tags ?? [],
+    note: customer.note,
+    followUps: followUps.map(mapFollowUp),
+    aiHistory: aiHistory.map(mapAiHistory),
+    createdAt: customer.created_at,
+  };
+}
+
+async function enrichCustomers(customers: CustomerRow[]) {
+  if (!customers.length) return [] as CustomerRecord[];
+
+  const ids = customers.map((item) => item.id);
+
+  const [{ data: followUps, error: followUpError }, { data: aiHistory, error: aiError }] = await Promise.all([
+    getSupabaseAdmin()
+      .from("follow_ups")
+      .select("id, customer_id, type, content, created_at")
+      .in("customer_id", ids)
+      .order("created_at", { ascending: false }),
+    getSupabaseAdmin()
+      .from("ai_histories")
+      .select("id, customer_id, type, content, created_at")
+      .in("customer_id", ids)
+      .order("created_at", { ascending: false }),
+  ]);
+
+  if (followUpError) throw followUpError;
+  if (aiError) throw aiError;
+
+  const followUpsByCustomer = new Map<string, FollowUpRow[]>();
+  for (const row of (followUps ?? []) as FollowUpRow[]) {
+    const list = followUpsByCustomer.get(row.customer_id) ?? [];
+    list.push(row);
+    followUpsByCustomer.set(row.customer_id, list);
+  }
+
+  const aiByCustomer = new Map<string, AiHistoryRow[]>();
+  for (const row of (aiHistory ?? []) as AiHistoryRow[]) {
+    if (!row.customer_id) continue;
+    const list = aiByCustomer.get(row.customer_id) ?? [];
+    list.push(row);
+    aiByCustomer.set(row.customer_id, list);
+  }
+
+  return customers.map((customer) =>
+    mapCustomer(customer, followUpsByCustomer.get(customer.id) ?? [], aiByCustomer.get(customer.id) ?? []),
+  );
 }
 
 export async function listCustomers() {
-  return readCustomers();
+  const userId = await getOrCreateDemoUserId();
+  const { data, error } = await getSupabaseAdmin()
+    .from("customers")
+    .select("id, user_id, name, company, contact_handle, source, stage, owner, next_follow_up, probability, estimated_amount, tags, note, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return enrichCustomers((data ?? []) as CustomerRow[]);
 }
 
 export async function getCustomerById(id: string): Promise<CustomerDetail | null> {
-  const customers = await readCustomers();
-  return customers.find((item) => item.id === id) ?? null;
+  const userId = await getOrCreateDemoUserId();
+  const { data, error } = await getSupabaseAdmin()
+    .from("customers")
+    .select("id, user_id, name, company, contact_handle, source, stage, owner, next_follow_up, probability, estimated_amount, tags, note, created_at")
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle<CustomerRow>();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  const [detail] = await enrichCustomers([data]);
+  return detail ?? null;
 }
 
 export async function createCustomer(input: CreateCustomerInput) {
-  const customers = await readCustomers();
-  const record: CustomerRecord = {
-    id: `cus_${Date.now()}`,
-    name: input.name,
-    company: input.company,
-    contactHandle: input.contactHandle,
-    source: input.source,
-    stage: input.stage,
-    owner: "任飞",
-    nextFollowUp: input.nextFollowUp,
-    probability: estimateProbability(input.stage),
-    estimatedAmount: formatCurrency(input.estimatedAmount),
-    tags: [input.stage],
-    note: input.note,
-    followUps: [makeRecord("录入", `新客户录入：${input.contactHandle}，来源 ${input.source}，预计金额 ${formatCurrency(input.estimatedAmount)}。`)],
-    aiHistory: [],
-    createdAt: new Date().toISOString(),
-  };
+  const userId = await getOrCreateDemoUserId();
+  const estimatedAmount = formatCurrency(input.estimatedAmount);
+  const probability = estimateProbability(input.stage);
 
-  customers.unshift(record);
-  await writeCustomers(customers);
-  return record;
+  const { data, error } = await getSupabaseAdmin()
+    .from("customers")
+    .insert({
+      user_id: userId,
+      name: input.name,
+      company: input.company,
+      contact_handle: input.contactHandle,
+      source: input.source,
+      stage: input.stage,
+      owner: "任飞",
+      next_follow_up: input.nextFollowUp,
+      probability,
+      estimated_amount: estimatedAmount,
+      tags: [input.stage],
+      note: input.note,
+    })
+    .select("id, user_id, name, company, contact_handle, source, stage, owner, next_follow_up, probability, estimated_amount, tags, note, created_at")
+    .single<CustomerRow>();
+
+  if (error || !data) throw error ?? new Error("Failed to create customer");
+
+  const { error: followUpError } = await getSupabaseAdmin().from("follow_ups").insert({
+    customer_id: data.id,
+    user_id: userId,
+    type: "录入",
+    content: `新客户录入：${input.contactHandle}，来源 ${input.source}，预计金额 ${estimatedAmount}。`,
+  });
+
+  if (followUpError) throw followUpError;
+
+  const [detail] = await enrichCustomers([data]);
+  return detail;
 }
 
 export async function updateCustomer(input: UpdateCustomerInput) {
-  const customers = await readCustomers();
-  const index = customers.findIndex((item) => item.id === input.id);
-  if (index === -1) return null;
+  const userId = await getOrCreateDemoUserId();
+  const estimatedAmount = formatCurrency(input.estimatedAmount);
+  const probability = estimateProbability(input.stage);
 
-  customers[index] = {
-    ...customers[index],
-    name: input.name,
-    company: input.company,
-    contactHandle: input.contactHandle,
-    source: input.source,
-    stage: input.stage,
-    nextFollowUp: input.nextFollowUp,
-    probability: estimateProbability(input.stage),
-    estimatedAmount: formatCurrency(input.estimatedAmount),
-    tags: [input.stage],
-    note: input.note,
-  };
+  const { data, error } = await getSupabaseAdmin()
+    .from("customers")
+    .update({
+      name: input.name,
+      company: input.company,
+      contact_handle: input.contactHandle,
+      source: input.source,
+      stage: input.stage,
+      next_follow_up: input.nextFollowUp,
+      probability,
+      estimated_amount: estimatedAmount,
+      tags: [input.stage],
+      note: input.note,
+    })
+    .eq("id", input.id)
+    .eq("user_id", userId)
+    .select("id, user_id, name, company, contact_handle, source, stage, owner, next_follow_up, probability, estimated_amount, tags, note, created_at")
+    .maybeSingle<CustomerRow>();
 
-  customers[index].followUps.unshift(makeRecord("编辑", `已更新客户资料：阶段 ${input.stage}，来源 ${input.source}，预计金额 ${formatCurrency(input.estimatedAmount)}。`));
-  await writeCustomers(customers);
-  return customers[index];
+  if (error) throw error;
+  if (!data) return null;
+
+  const { error: followUpError } = await getSupabaseAdmin().from("follow_ups").insert({
+    customer_id: data.id,
+    user_id: userId,
+    type: "编辑",
+    content: `已更新客户资料：阶段 ${input.stage}，来源 ${input.source}，预计金额 ${estimatedAmount}。`,
+  });
+
+  if (followUpError) throw followUpError;
+
+  const [detail] = await enrichCustomers([data]);
+  return detail;
 }
 
 export async function deleteCustomer(id: string) {
-  const customers = await readCustomers();
-  const next = customers.filter((item) => item.id !== id);
-  const removed = next.length !== customers.length;
-  if (!removed) return false;
-  await writeCustomers(next);
-  return true;
+  const userId = await getOrCreateDemoUserId();
+  const { error, count } = await getSupabaseAdmin()
+    .from("customers")
+    .delete({ count: "exact" })
+    .eq("id", id)
+    .eq("user_id", userId);
+
+  if (error) throw error;
+  return (count ?? 0) > 0;
 }
 
 export async function exportCustomersCsv() {
-  const customers = await readCustomers();
+  const customers = await listCustomers();
   const headers = ["ID", "姓名", "公司", "联系方式", "来源", "阶段", "负责人", "下次跟进", "成交概率", "预计金额", "备注"];
   const rows = customers.map((item) => [
     item.id,
@@ -142,34 +334,53 @@ export async function exportCustomersCsv() {
 }
 
 export async function addFollowUp(input: AddFollowUpInput) {
-  const customers = await readCustomers();
-  const index = customers.findIndex((item) => item.id === input.customerId);
-  if (index === -1) return null;
+  const userId = await getOrCreateDemoUserId();
+  const { data, error } = await getSupabaseAdmin()
+    .from("follow_ups")
+    .insert({
+      customer_id: input.customerId,
+      user_id: userId,
+      type: input.type,
+      content: input.content,
+    })
+    .select("id, customer_id, type, content, created_at")
+    .single<FollowUpRow>();
 
-  const record = makeRecord(input.type, input.content);
-  customers[index].followUps.unshift(record);
-  await writeCustomers(customers);
-  return record;
+  if (error || !data) throw error ?? new Error("Failed to add follow up");
+  return mapFollowUp(data);
 }
 
 export async function saveAiRecord(input: SaveAiRecordInput) {
-  const customers = await readCustomers();
-  const index = customers.findIndex((item) => item.id === input.customerId);
-  if (index === -1) return null;
+  const userId = await getOrCreateDemoUserId();
+  const content = `语气：${input.tone}；顾虑：${input.concern}；目标：${input.goal}；生成结果：${input.generatedCopy}`;
 
-  const summary = makeRecord(
-    `AI-${input.generationType}`,
-    `语气：${input.tone}；顾虑：${input.concern}；目标：${input.goal}；生成结果：${input.generatedCopy}`,
-  );
+  const { data, error } = await getSupabaseAdmin()
+    .from("ai_histories")
+    .insert({
+      user_id: userId,
+      customer_id: input.customerId,
+      type: `AI-${input.generationType}`,
+      content,
+    })
+    .select("id, customer_id, type, content, created_at")
+    .single<AiHistoryRow>();
 
-  customers[index].aiHistory = [summary, ...(customers[index].aiHistory ?? [])];
-  customers[index].followUps.unshift(makeRecord("AI话术", `已生成并保存一条${input.generationType}话术。`));
-  await writeCustomers(customers);
-  return summary;
+  if (error || !data) throw error ?? new Error("Failed to save AI history");
+
+  const { error: followUpError } = await getSupabaseAdmin().from("follow_ups").insert({
+    customer_id: input.customerId,
+    user_id: userId,
+    type: "AI话术",
+    content: `已生成并保存一条${input.generationType}话术。`,
+  });
+
+  if (followUpError) throw followUpError;
+
+  return mapAiHistory(data);
 }
 
 export async function getDashboardHighlights() {
-  const all = await readCustomers();
+  const all = await listCustomers();
   const totalEstimated = all.reduce((sum, item) => {
     const normalized = Number(item.estimatedAmount.replace(/[¥,]/g, ""));
     return sum + normalized;
