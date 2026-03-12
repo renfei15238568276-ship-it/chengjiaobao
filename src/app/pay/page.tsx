@@ -49,7 +49,7 @@ export default function PayPage() {
             选择适合你的版本，扫码付款后提交开通信息。当前阶段先走人工审核开通，适合你先卖起来，不等正式支付系统也能收钱。
           </p>
           <div className="mt-8 flex flex-wrap gap-4 text-sm text-white/60">
-            <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">先收款，再开通</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">先付款，再开通</span>
             <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">支持微信 / 支付宝</span>
             <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">适合内测期与首批付费用户</span>
           </div>
@@ -92,12 +92,12 @@ export default function PayPage() {
             <p className="text-sm text-cyan-300">人工开通入口</p>
             <h3 className="mt-2 text-2xl font-semibold">付款后联系我开通</h3>
             <p className="mt-3 text-sm leading-7 text-white/70">
-              当前演示版先走人工审核开通。付款后请保存截图，并把姓名、手机号、微信号、套餐和付款金额通过微信发给我，我会尽快处理。
+              当前演示版先走人工审核开通。付款后请保存截图，并把姓名、手机号、微信号、套餐和付款金额通过 Telegram 发给我，我会尽快处理。
             </p>
             <div className="mt-6 space-y-3">
               <div className="rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-4">
-                <p className="text-sm text-white/55">联系微信</p>
-                <p className="mt-1 text-lg font-medium text-white">gomining125</p>
+                <p className="text-sm text-white/55">联系 Telegram</p>
+                <p className="mt-1 text-lg font-medium text-white">@gomining125</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-4 text-sm leading-7 text-white/70">
                 请按这个格式发我：姓名 / 手机号 / 微信号 / 套餐 / 金额 / 付款截图。
@@ -105,7 +105,7 @@ export default function PayPage() {
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
               <a href="/contact" className="rounded-full bg-cyan-400 px-5 py-3 font-medium text-slate-950 transition hover:bg-cyan-300">
-                查看联系开通说明
+                查看 Telegram / 微信开通说明
               </a>
               <a href="/login" className="rounded-full border border-white/15 px-5 py-3 text-white/80 transition hover:border-white/35 hover:text-white">
                 管理员登录

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createCustomerSchema } from "@/lib/customer-schemas";
 import { createCustomer } from "@/lib/customer-service";
+import { SubscriptionRequiredError, requireActiveSubscription } from "@/lib/subscription-service";
 
 export type CreateCustomerState = {
   success: boolean;
@@ -37,7 +38,19 @@ export async function createCustomerAction(
     };
   }
 
-  await createCustomer(parsed.data);
+  try {
+    await requireActiveSubscription();
+    await createCustomer(parsed.data);
+  } catch (error) {
+    if (error instanceof SubscriptionRequiredError) {
+      return {
+        success: false,
+        message: "当前账号还未开通套餐，先去付款开通后再新建客户。",
+        values: raw,
+      };
+    }
+    throw error;
+  }
 
   redirect(`/customers?created=${encodeURIComponent(parsed.data.name)}`);
 }

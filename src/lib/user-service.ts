@@ -140,3 +140,12 @@ export async function listUsers() {
     }),
   );
 }
+
+export async function changePassword(userId: string, nextPassword: string) {
+  const { error } = await getSupabaseAdmin()
+    .from("users")
+    .update({ password_hash: hashPassword(nextPassword) })
+    .eq("id", userId);
+
+  if (error) throw error;
+}

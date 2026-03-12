@@ -1,17 +1,18 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { getCurrentSession } from "@/lib/auth";
 
-const nav = [
+const nav: { href: string; label: string; adminOnly?: boolean }[] = [
   { href: "/dashboard", label: "控制台" },
   { href: "/customers", label: "客户" },
   { href: "/customers/new", label: "新建客户" },
   { href: "/ai", label: "AI 助手" },
-  { href: "/pay", label: "收款页" },
-  { href: "/payments", label: "收款审核" },
-  { href: "/admin/users", label: "用户开通" },
+  { href: "/pay", label: "付款开通" },
+  { href: "/payments", label: "收款审核", adminOnly: true },
+  { href: "/admin/users", label: "用户开通", adminOnly: true },
 ];
 
-export function AppShell({
+export async function AppShell({
   title,
   eyebrow,
   description,
@@ -24,6 +25,9 @@ export function AppShell({
   actions?: ReactNode;
   children: ReactNode;
 }) {
+  const session = await getCurrentSession();
+  const visibleNav = nav.filter((item) => !item.adminOnly || session?.role === "admin");
+
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
       <div className="mx-auto max-w-7xl px-6 py-8 lg:px-8">
@@ -38,7 +42,7 @@ export function AppShell({
           </div>
 
           <nav className="mt-6 flex flex-wrap gap-3 border-t border-white/10 pt-5 text-sm">
-            {nav.map((item) => (
+            {visibleNav.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}

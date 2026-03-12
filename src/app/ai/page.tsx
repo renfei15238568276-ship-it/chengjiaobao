@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { SubscriptionGuardCard } from "@/components/subscription-guard-card";
 import { ProtectedShell } from "@/components/protected-shell";
 import { listCustomers } from "@/lib/customer-service";
+import { hasActiveSubscription } from "@/lib/subscription-service";
 import { AiWorkbench } from "./ai-workbench";
 
 const generators = [
@@ -24,14 +26,15 @@ const generators = [
 ];
 
 export default async function AiPage() {
-  const customers = await listCustomers();
+  const active = await hasActiveSubscription();
+  const customers = active ? await listCustomers() : [];
 
   return (
     <ProtectedShell>
       <AppShell
       eyebrow="成交宝 / AI 助手"
       title="AI 成交助手"
-      description="现在不只是展示页了：你可以生成话术，并把结果直接保存回客户记录。"
+      description="已开通用户才能正式使用 AI 话术生成和保存能力。"
       actions={
         <>
           <Link href="/customers" className="rounded-full border border-white/15 px-4 py-2 text-white/80 transition hover:border-white/35 hover:text-white">客户列表</Link>
@@ -39,7 +42,7 @@ export default async function AiPage() {
         </>
       }
     >
-      <AiWorkbench customers={customers} />
+      {active ? <AiWorkbench customers={customers} /> : <SubscriptionGuardCard title="当前账号还不能使用 AI 助手" description="先去付款开通套餐，开通后才能生成并保存 AI 话术。" />}
 
       <section className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {generators.map((item) => (

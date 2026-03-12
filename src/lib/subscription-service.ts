@@ -1,6 +1,13 @@
 import { getCurrentSession } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
+export class SubscriptionRequiredError extends Error {
+  constructor(message = "当前账号还未开通套餐") {
+    super(message);
+    this.name = "SubscriptionRequiredError";
+  }
+}
+
 type SubscriptionRow = {
   id: string;
   user_id: string;
@@ -58,4 +65,19 @@ export async function getUserSubscription(userId: string): Promise<AccountSubscr
     startsAt: data.starts_at,
     expiresAt: data.expires_at,
   };
+}
+
+export async function hasActiveSubscription() {
+  const session = await getCurrentSession();
+  if (session?.role === "admin") return true;
+
+  const subscription = await getCurrentUserSubscription();
+  return subscription?.status === "active";
+}
+
+export async function requireActiveSubscription() {
+  const ok = await hasActiveSubscription();
+  if (!ok) {
+    throw new SubscriptionRequiredError();
+  }
 }

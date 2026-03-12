@@ -22,7 +22,7 @@ export default async function LoginPage() {
           </div>
         </section>
         <section className="px-8 py-10 lg:px-10 lg:py-12">
-          <p className="text-sm text-cyan-700">管理员入口</p>
+          <p className="text-sm text-cyan-700">登录入口</p>
           <h2 className="mt-2 text-3xl font-semibold text-slate-900">登录后台</h2>
           <p className="mt-3 text-slate-600">先完成登录保护，这套东西才更像正式产品。</p>
           <div className="mt-8">

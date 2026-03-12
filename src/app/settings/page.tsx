@@ -2,6 +2,7 @@ import { AppShell } from "@/components/app-shell";
 import { ProtectedShell } from "@/components/protected-shell";
 import { getCurrentSession } from "@/lib/auth";
 import { getCurrentUserSubscription } from "@/lib/subscription-service";
+import { ChangePasswordForm } from "./change-password-form";
 
 const subscriptionStatusLabel = {
   pending: "待开通",
@@ -75,14 +76,22 @@ export default async function SettingsPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 lg:col-span-2">
+          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <p className="text-sm text-cyan-700">账户安全</p>
+            <h2 className="mt-2 text-2xl font-semibold">修改密码</h2>
+            <div className="mt-6">
+              <ChangePasswordForm />
+            </div>
+          </div>
+
+          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
             <p className="text-sm text-cyan-700">下一步规划</p>
             <h2 className="mt-2 text-2xl font-semibold">套餐系统 checklist</h2>
             <ul className="mt-6 space-y-3 text-slate-700">
-              <li className="rounded-2xl bg-slate-50 px-4 py-3">1. 管理员给指定用户开通套餐</li>
-              <li className="rounded-2xl bg-slate-50 px-4 py-3">2. 收款审核通过后直接写 subscriptions</li>
-              <li className="rounded-2xl bg-slate-50 px-4 py-3">3. 已过期用户限制 AI / 高级功能</li>
-              <li className="rounded-2xl bg-slate-50 px-4 py-3">4. 补月费 / 年费续费入口</li>
+              <li className="rounded-2xl bg-slate-50 px-4 py-3">1. 收款审核通过后直接写 subscriptions</li>
+              <li className="rounded-2xl bg-slate-50 px-4 py-3">2. 已过期用户限制 AI / 高级功能</li>
+              <li className="rounded-2xl bg-slate-50 px-4 py-3">3. 补月费 / 年费续费入口</li>
+              <li className="rounded-2xl bg-slate-50 px-4 py-3">4. 后面再补忘记密码 / 重置密码</li>
             </ul>
           </div>
         </section>
