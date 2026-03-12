@@ -8,6 +8,17 @@ type UserRow = {
   display_name: string | null;
   role?: string | null;
   password_hash?: string | null;
+  status?: string | null;
+  created_at?: string | null;
+};
+
+export type UserSummary = {
+  id: string;
+  username: string;
+  displayName: string;
+  role: string;
+  status: string;
+  createdAt: string | null;
 };
 
 export function hashPassword(password: string) {
@@ -84,4 +95,24 @@ export async function verifyUserLogin(username: string, password: string) {
     displayName: data.display_name ?? data.username,
     role: data.role ?? "user",
   };
+}
+
+export async function listUsers() {
+  const { data, error } = await getSupabaseAdmin()
+    .from("users")
+    .select("id, username, display_name, role, status, created_at")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  return ((data ?? []) as UserRow[]).map(
+    (item): UserSummary => ({
+      id: item.id,
+      username: item.username,
+      displayName: item.display_name ?? item.username,
+      role: item.role ?? "user",
+      status: item.status ?? "active",
+      createdAt: item.created_at ?? null,
+    }),
+  );
 }

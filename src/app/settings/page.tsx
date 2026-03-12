@@ -1,24 +1,21 @@
 import { AppShell } from "@/components/app-shell";
 import { ProtectedShell } from "@/components/protected-shell";
-import { getLatestMembership } from "@/lib/membership-store";
+import { getCurrentSession } from "@/lib/auth";
+import { getCurrentUserSubscription } from "@/lib/subscription-service";
 
-const planLabel = {
-  personal: "个人版",
-  team: "团队版",
-  private: "私有部署版",
-};
-
-const statusLabel = {
-  inactive: "未开通",
+const subscriptionStatusLabel = {
+  pending: "待开通",
   active: "已开通",
   expired: "已过期",
+  cancelled: "已取消",
 };
 
 export default async function SettingsPage() {
-  const latestMembership = await getLatestMembership();
+  const [session, subscription] = await Promise.all([getCurrentSession(), getCurrentUserSubscription()]);
 
   const envSummary = [
-    ["管理员账号", process.env.ADMIN_USERNAME || "admin"],
+    ["当前登录用户", session?.username ?? "未识别"],
+    ["当前角色", session?.role ?? "未识别"],
     ["OpenRouter Base URL", process.env.OPENROUTER_BASE_URL || "未配置"],
     ["OpenRouter Model", process.env.OPENROUTER_MODEL || "未配置"],
     ["AI Key 状态", process.env.OPENROUTER_API_KEY ? "已配置" : "未配置"],
@@ -28,35 +25,39 @@ export default async function SettingsPage() {
     <ProtectedShell>
       <AppShell
         eyebrow="成交宝 / 设置"
-        title="系统设置"
-        description="这是最快成品方案里的设置页：先把管理员账号和 AI 接口配置入口摆清楚。"
+        title="账户与系统设置"
+        description="这一步先把当前用户是谁、套餐状态是什么显示清楚。后面再接管理员开通和到期限制。"
       >
         <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-            <p className="text-sm text-cyan-700">当前会员</p>
-            <h2 className="mt-2 text-2xl font-semibold">开通状态</h2>
-            {latestMembership ? (
+            <p className="text-sm text-cyan-700">当前账户</p>
+            <h2 className="mt-2 text-2xl font-semibold">套餐状态</h2>
+            {subscription ? (
               <div className="mt-6 space-y-3">
                 <div className="rounded-2xl border border-slate-200 px-4 py-3">
-                  <p className="text-sm text-slate-500">会员用户</p>
-                  <p className="mt-1 font-medium text-slate-900">{latestMembership.customerName}</p>
+                  <p className="text-sm text-slate-500">当前用户</p>
+                  <p className="mt-1 font-medium text-slate-900">{session?.username}</p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 px-4 py-3">
                   <p className="text-sm text-slate-500">当前套餐</p>
-                  <p className="mt-1 font-medium text-slate-900">{planLabel[latestMembership.plan]}</p>
+                  <p className="mt-1 font-medium text-slate-900">{subscription.planName}</p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 px-4 py-3">
-                  <p className="text-sm text-slate-500">会员状态</p>
-                  <p className="mt-1 font-medium text-slate-900">{statusLabel[latestMembership.status]}</p>
+                  <p className="text-sm text-slate-500">开通状态</p>
+                  <p className="mt-1 font-medium text-slate-900">{subscriptionStatusLabel[subscription.status]}</p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 px-4 py-3">
+                  <p className="text-sm text-slate-500">开始时间</p>
+                  <p className="mt-1 font-medium text-slate-900">{subscription.startsAt ? new Date(subscription.startsAt).toLocaleString("zh-CN") : "未设置"}</p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 px-4 py-3">
                   <p className="text-sm text-slate-500">到期时间</p>
-                  <p className="mt-1 font-medium text-slate-900">{new Date(latestMembership.expiresAt).toLocaleString("zh-CN")}</p>
+                  <p className="mt-1 font-medium text-slate-900">{subscription.expiresAt ? new Date(subscription.expiresAt).toLocaleString("zh-CN") : "未设置"}</p>
                 </div>
               </div>
             ) : (
               <div className="mt-6 rounded-2xl border border-dashed border-slate-200 px-4 py-8 text-sm text-slate-500">
-                还没有开通过会员。你可以先去收款审核页，把付款申请一键开通。
+                当前账号还没有套餐记录。下一步我会继续把“管理员开通用户套餐”接上。
               </div>
             )}
           </div>
@@ -75,13 +76,13 @@ export default async function SettingsPage() {
           </div>
 
           <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 lg:col-span-2">
-            <p className="text-sm text-cyan-700">接下来怎么变成更正式</p>
-            <h2 className="mt-2 text-2xl font-semibold">成品落地 checklist</h2>
+            <p className="text-sm text-cyan-700">下一步规划</p>
+            <h2 className="mt-2 text-2xl font-semibold">套餐系统 checklist</h2>
             <ul className="mt-6 space-y-3 text-slate-700">
-              <li className="rounded-2xl bg-slate-50 px-4 py-3">1. 把 .env 里的管理员账号密码改掉</li>
-              <li className="rounded-2xl bg-slate-50 px-4 py-3">2. 填入 OPENROUTER_API_KEY，接真 AI 接口</li>
-              <li className="rounded-2xl bg-slate-50 px-4 py-3">3. 用 npm run build && npm run start 跑生产版</li>
-              <li className="rounded-2xl bg-slate-50 px-4 py-3">4. 后续补会员自动到期、续费和正式在线支付</li>
+              <li className="rounded-2xl bg-slate-50 px-4 py-3">1. 管理员给指定用户开通套餐</li>
+              <li className="rounded-2xl bg-slate-50 px-4 py-3">2. 收款审核通过后直接写 subscriptions</li>
+              <li className="rounded-2xl bg-slate-50 px-4 py-3">3. 已过期用户限制 AI / 高级功能</li>
+              <li className="rounded-2xl bg-slate-50 px-4 py-3">4. 补月费 / 年费续费入口</li>
             </ul>
           </div>
         </section>

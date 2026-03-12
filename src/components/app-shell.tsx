@@ -8,6 +8,7 @@ const nav = [
   { href: "/ai", label: "AI 助手" },
   { href: "/pay", label: "收款页" },
   { href: "/payments", label: "收款审核" },
+  { href: "/admin/users", label: "用户开通" },
 ];
 
 export function AppShell({
