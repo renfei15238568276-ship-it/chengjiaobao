@@ -13,13 +13,13 @@ export default function ContactPage() {
         <section className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-[28px] border border-white/10 bg-white/5 p-6">
             <p className="text-sm text-cyan-300">联系方式</p>
-            <h2 className="mt-2 text-2xl font-semibold">优先微信联系</h2>
+            <h2 className="mt-2 text-2xl font-semibold">优先 Telegram 联系</h2>
             <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/55 px-4 py-4">
               <p className="text-sm text-white/55">微信号</p>
               <p className="mt-1 text-xl font-medium">r18974670134</p>
             </div>
             <p className="mt-4 text-sm leading-7 text-white/70">
-              建议优先通过微信联系，付款后把截图和开通信息发过来，我会尽快核对并处理。
+              建议优先通过 Telegram 联系，付款后把截图和开通信息发过来，我会尽快核对并处理。
             </p>
           </div>
 
@@ -39,7 +39,7 @@ export default function ContactPage() {
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
               <a href="/pay" className="rounded-full bg-cyan-400 px-5 py-3 font-medium text-slate-950 transition hover:bg-cyan-300">
-                返回收款页
+                返回付款页
               </a>
               <a href="/" className="rounded-full border border-white/15 px-5 py-3 text-white/80 transition hover:border-white/35 hover:text-white">
                 返回首页

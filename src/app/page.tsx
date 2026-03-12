@@ -56,7 +56,7 @@ export default function Home() {
                 进入产品原型
               </a>
               <a href="/pay" className="rounded-full bg-emerald-400 px-6 py-3 font-medium text-slate-950 transition hover:bg-emerald-300">
-                去收款开通
+                去付款开通
               </a>
               <a href="#features" className="rounded-full border border-white/15 px-6 py-3 font-medium text-white/80 transition hover:border-white/35 hover:text-white">
                 看核心功能
