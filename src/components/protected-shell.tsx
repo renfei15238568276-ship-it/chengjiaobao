@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { requireAuth } from "@/lib/auth";
+import { getCurrentSession, requireAuth } from "@/lib/auth";
 import { logoutAction } from "@/app/login/actions";
 
 export async function ProtectedShell({ children }: { children: ReactNode }) {
@@ -10,13 +10,15 @@ export async function ProtectedShell({ children }: { children: ReactNode }) {
     redirect("/login");
   }
 
+  const session = await getCurrentSession();
+
   return (
     <div>
       <div className="sticky top-0 z-50 border-b border-slate-200 bg-white/85 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-8">
           <div>
             <p className="text-sm text-cyan-700">成交宝</p>
-            <p className="text-xs text-slate-500">单管理员模式</p>
+            <p className="text-xs text-slate-500">当前用户：{session?.username ?? "未识别"}{session?.role ? ` · ${session.role}` : ""}</p>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <Link href="/dashboard" className="rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:bg-slate-50">控制台</Link>

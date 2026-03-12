@@ -1,5 +1,6 @@
 import type { CreateCustomerInput, UpdateCustomerInput } from "@/lib/customer-schemas";
 import type { AddFollowUpInput, SaveAiRecordInput } from "@/lib/followup-schemas";
+import { getCurrentSession } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import type { CustomerRecord, FollowUpRecord } from "@/lib/types";
 
@@ -26,6 +27,7 @@ type CustomerRow = {
 type FollowUpRow = {
   id: string;
   customer_id: string;
+  user_id: string;
   type: string;
   content: string;
   created_at: string;
@@ -33,6 +35,7 @@ type FollowUpRow = {
 
 type AiHistoryRow = {
   id: string;
+  user_id: string;
   customer_id: string | null;
   type: string;
   content: string;
@@ -77,7 +80,7 @@ function nowLabelFromDate(input: string) {
   }).format(new Date(input));
 }
 
-async function getOrCreateDemoUserId() {
+async function ensureAdminUser() {
   const admin = getSupabaseAdmin();
 
   const { error: upsertError } = await admin.from("users").upsert(
@@ -94,19 +97,26 @@ async function getOrCreateDemoUserId() {
   if (upsertError) {
     throw upsertError;
   }
+}
 
-  const { data: existing, error: findError } = await admin
+async function getCurrentUserId() {
+  const session = await getCurrentSession();
+  if (session?.userId) return session.userId;
+
+  await ensureAdminUser();
+
+  const { data, error } = await getSupabaseAdmin()
     .from("users")
     .select("id")
     .eq("username", "admin")
     .limit(1)
     .single<UserRow>();
 
-  if (findError || !existing) {
-    throw findError ?? new Error("Failed to load demo user");
+  if (error || !data) {
+    throw error ?? new Error("Failed to resolve current user");
   }
 
-  return existing.id;
+  return data.id;
 }
 
 function mapFollowUp(row: FollowUpRow): FollowUpRecord {
@@ -127,11 +137,7 @@ function mapAiHistory(row: AiHistoryRow): FollowUpRecord {
   };
 }
 
-function mapCustomer(
-  customer: CustomerRow,
-  followUps: FollowUpRow[],
-  aiHistory: AiHistoryRow[],
-): CustomerRecord {
+function mapCustomer(customer: CustomerRow, followUps: FollowUpRow[], aiHistory: AiHistoryRow[]): CustomerRecord {
   return {
     id: customer.id,
     name: customer.name,
@@ -151,20 +157,23 @@ function mapCustomer(
   };
 }
 
-async function enrichCustomers(customers: CustomerRow[]) {
+async function enrichCustomers(userId: string, customers: CustomerRow[]) {
   if (!customers.length) return [] as CustomerRecord[];
 
   const ids = customers.map((item) => item.id);
+  const admin = getSupabaseAdmin();
 
   const [{ data: followUps, error: followUpError }, { data: aiHistory, error: aiError }] = await Promise.all([
-    getSupabaseAdmin()
+    admin
       .from("follow_ups")
-      .select("id, customer_id, type, content, created_at")
+      .select("id, customer_id, user_id, type, content, created_at")
+      .eq("user_id", userId)
       .in("customer_id", ids)
       .order("created_at", { ascending: false }),
-    getSupabaseAdmin()
+    admin
       .from("ai_histories")
-      .select("id, customer_id, type, content, created_at")
+      .select("id, user_id, customer_id, type, content, created_at")
+      .eq("user_id", userId)
       .in("customer_id", ids)
       .order("created_at", { ascending: false }),
   ]);
@@ -187,13 +196,11 @@ async function enrichCustomers(customers: CustomerRow[]) {
     aiByCustomer.set(row.customer_id, list);
   }
 
-  return customers.map((customer) =>
-    mapCustomer(customer, followUpsByCustomer.get(customer.id) ?? [], aiByCustomer.get(customer.id) ?? []),
-  );
+  return customers.map((customer) => mapCustomer(customer, followUpsByCustomer.get(customer.id) ?? [], aiByCustomer.get(customer.id) ?? []));
 }
 
 export async function listCustomers() {
-  const userId = await getOrCreateDemoUserId();
+  const userId = await getCurrentUserId();
   const { data, error } = await getSupabaseAdmin()
     .from("customers")
     .select("id, user_id, name, company, contact_handle, source, stage, owner, next_follow_up, probability, estimated_amount, tags, note, created_at")
@@ -201,11 +208,11 @@ export async function listCustomers() {
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return enrichCustomers((data ?? []) as CustomerRow[]);
+  return enrichCustomers(userId, (data ?? []) as CustomerRow[]);
 }
 
 export async function getCustomerById(id: string): Promise<CustomerDetail | null> {
-  const userId = await getOrCreateDemoUserId();
+  const userId = await getCurrentUserId();
   const { data, error } = await getSupabaseAdmin()
     .from("customers")
     .select("id, user_id, name, company, contact_handle, source, stage, owner, next_follow_up, probability, estimated_amount, tags, note, created_at")
@@ -216,12 +223,12 @@ export async function getCustomerById(id: string): Promise<CustomerDetail | null
   if (error) throw error;
   if (!data) return null;
 
-  const [detail] = await enrichCustomers([data]);
+  const [detail] = await enrichCustomers(userId, [data]);
   return detail ?? null;
 }
 
 export async function createCustomer(input: CreateCustomerInput) {
-  const userId = await getOrCreateDemoUserId();
+  const userId = await getCurrentUserId();
   const estimatedAmount = formatCurrency(input.estimatedAmount);
   const probability = estimateProbability(input.stage);
 
@@ -234,7 +241,7 @@ export async function createCustomer(input: CreateCustomerInput) {
       contact_handle: input.contactHandle,
       source: input.source,
       stage: input.stage,
-      owner: "任飞",
+      owner: "当前用户",
       next_follow_up: input.nextFollowUp,
       probability,
       estimated_amount: estimatedAmount,
@@ -255,12 +262,12 @@ export async function createCustomer(input: CreateCustomerInput) {
 
   if (followUpError) throw followUpError;
 
-  const [detail] = await enrichCustomers([data]);
+  const [detail] = await enrichCustomers(userId, [data]);
   return detail;
 }
 
 export async function updateCustomer(input: UpdateCustomerInput) {
-  const userId = await getOrCreateDemoUserId();
+  const userId = await getCurrentUserId();
   const estimatedAmount = formatCurrency(input.estimatedAmount);
   const probability = estimateProbability(input.stage);
 
@@ -295,12 +302,12 @@ export async function updateCustomer(input: UpdateCustomerInput) {
 
   if (followUpError) throw followUpError;
 
-  const [detail] = await enrichCustomers([data]);
+  const [detail] = await enrichCustomers(userId, [data]);
   return detail;
 }
 
 export async function deleteCustomer(id: string) {
-  const userId = await getOrCreateDemoUserId();
+  const userId = await getCurrentUserId();
   const { error, count } = await getSupabaseAdmin()
     .from("customers")
     .delete({ count: "exact" })
@@ -334,7 +341,11 @@ export async function exportCustomersCsv() {
 }
 
 export async function addFollowUp(input: AddFollowUpInput) {
-  const userId = await getOrCreateDemoUserId();
+  const userId = await getCurrentUserId();
+
+  const customer = await getCustomerById(input.customerId);
+  if (!customer) return null;
+
   const { data, error } = await getSupabaseAdmin()
     .from("follow_ups")
     .insert({
@@ -343,7 +354,7 @@ export async function addFollowUp(input: AddFollowUpInput) {
       type: input.type,
       content: input.content,
     })
-    .select("id, customer_id, type, content, created_at")
+    .select("id, customer_id, user_id, type, content, created_at")
     .single<FollowUpRow>();
 
   if (error || !data) throw error ?? new Error("Failed to add follow up");
@@ -351,7 +362,11 @@ export async function addFollowUp(input: AddFollowUpInput) {
 }
 
 export async function saveAiRecord(input: SaveAiRecordInput) {
-  const userId = await getOrCreateDemoUserId();
+  const userId = await getCurrentUserId();
+
+  const customer = await getCustomerById(input.customerId);
+  if (!customer) return null;
+
   const content = `语气：${input.tone}；顾虑：${input.concern}；目标：${input.goal}；生成结果：${input.generatedCopy}`;
 
   const { data, error } = await getSupabaseAdmin()
@@ -362,7 +377,7 @@ export async function saveAiRecord(input: SaveAiRecordInput) {
       type: `AI-${input.generationType}`,
       content,
     })
-    .select("id, customer_id, type, content, created_at")
+    .select("id, user_id, customer_id, type, content, created_at")
     .single<AiHistoryRow>();
 
   if (error || !data) throw error ?? new Error("Failed to save AI history");

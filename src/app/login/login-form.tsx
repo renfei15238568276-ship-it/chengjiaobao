@@ -11,7 +11,7 @@ export function LoginForm() {
   return (
     <form action={formAction} className="space-y-5">
       <label className="block">
-        <span className="mb-2 block text-sm font-medium text-slate-700">管理员账号</span>
+        <span className="mb-2 block text-sm font-medium text-slate-700">用户名</span>
         <input name="username" defaultValue="admin" className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-cyan-500" />
       </label>
       <label className="block">
