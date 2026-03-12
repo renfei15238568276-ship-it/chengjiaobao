@@ -16,7 +16,7 @@ export default function ContactPage() {
             <h2 className="mt-2 text-2xl font-semibold">优先微信联系</h2>
             <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/55 px-4 py-4">
               <p className="text-sm text-white/55">微信号</p>
-              <p className="mt-1 text-xl font-medium">gomining125</p>
+              <p className="mt-1 text-xl font-medium">r18974670134</p>
             </div>
             <p className="mt-4 text-sm leading-7 text-white/70">
               建议优先通过微信联系，付款后把截图和开通信息发过来，我会尽快核对并处理。
