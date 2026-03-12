@@ -1,0 +1,35 @@
+import { redirect } from "next/navigation";
+import { isAuthenticated } from "@/lib/auth";
+import { LoginForm } from "./login-form";
+
+export default async function LoginPage() {
+  const authed = await isAuthenticated();
+  if (authed) {
+    redirect("/dashboard");
+  }
+
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-slate-100 px-6">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-[36px] bg-white shadow-2xl ring-1 ring-slate-200 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="bg-slate-950 px-8 py-10 text-white lg:px-10 lg:py-12">
+          <p className="text-sm text-cyan-300">成交宝 / 管理员登录</p>
+          <h1 className="mt-4 text-4xl font-semibold leading-tight">把客户、跟进、AI 话术和成交过程，拢到一个后台里。</h1>
+          <p className="mt-4 text-white/70">这是最快成品方案：单管理员登录 + 本地持久化 + 可继续部署上线。先把能用的后台撑起来。</p>
+          <div className="mt-8 space-y-3 text-sm text-white/70">
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">默认账号：admin</div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">默认密码：12345678</div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">后面可在 .env 里修改</div>
+          </div>
+        </section>
+        <section className="px-8 py-10 lg:px-10 lg:py-12">
+          <p className="text-sm text-cyan-700">管理员入口</p>
+          <h2 className="mt-2 text-3xl font-semibold text-slate-900">登录后台</h2>
+          <p className="mt-3 text-slate-600">先完成登录保护，这套东西才更像正式产品。</p>
+          <div className="mt-8">
+            <LoginForm />
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}

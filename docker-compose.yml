@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  chengjiaobao:
+    build: .
+    container_name: chengjiaobao
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
