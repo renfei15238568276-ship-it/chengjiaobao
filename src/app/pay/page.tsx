@@ -43,15 +43,15 @@ export default function PayPage() {
     <main className="min-h-screen bg-[#07111f] text-white">
       <section className="mx-auto max-w-7xl px-6 py-8 lg:px-8 lg:py-10">
         <header className="rounded-[32px] border border-white/10 bg-gradient-to-br from-cyan-400/12 to-blue-500/5 p-8 lg:p-10">
-          <p className="text-sm uppercase tracking-[0.25em] text-cyan-300/80">成交宝收款页</p>
+          <p className="text-sm uppercase tracking-[0.25em] text-cyan-300/80">成交宝 / 付款开通</p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight lg:text-6xl">开通成交宝会员</h1>
           <p className="mt-5 max-w-3xl text-base leading-8 text-white/70 lg:text-lg">
-            选择适合你的版本，扫码付款后提交开通信息。当前阶段先走人工审核开通，适合你先卖起来，不等正式支付系统也能收钱。
+            选择适合你的版本，付款后提交开通信息。当前支持人工审核开通，确认后即可开始使用。
           </p>
           <div className="mt-8 flex flex-wrap gap-4 text-sm text-white/60">
             <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">先付款，再开通</span>
             <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">支持微信 / 支付宝</span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">适合内测期与首批付费用户</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">适合个人与团队使用</span>
           </div>
         </header>
 
@@ -92,7 +92,7 @@ export default function PayPage() {
             <p className="text-sm text-cyan-300">人工开通入口</p>
             <h3 className="mt-2 text-2xl font-semibold">付款后联系我开通</h3>
             <p className="mt-3 text-sm leading-7 text-white/70">
-              当前演示版先走人工审核开通。付款后请保存截图，并把姓名、手机号、微信号、套餐和付款金额通过 Telegram 发给我，我会尽快处理。
+              付款后请保存截图，并把姓名、手机号、微信号、套餐和付款金额通过 Telegram 发给我，我会尽快处理。
             </p>
             <div className="mt-6 space-y-3">
               <div className="rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-4">
@@ -118,7 +118,7 @@ export default function PayPage() {
           <h3 className="text-2xl font-semibold">开通说明</h3>
           <ul className="mt-5 grid gap-3 text-sm leading-7 text-white/70">
             <li>1. 先扫码付款，再填写下方信息并保存付款截图。</li>
-            <li>2. 当前 Vercel 演示版不做服务器写库，先保证收款页稳定可打开、不报错。</li>
+            <li>2. 当前支持人工审核开通，确认付款信息后即可为你开通使用。</li>
             <li>3. 实际开通先走人工核对，正常 5~30 分钟内处理。</li>
             <li>4. 后续接入数据库或表单服务后，再升级成正式在线提交版。</li>
           </ul>
