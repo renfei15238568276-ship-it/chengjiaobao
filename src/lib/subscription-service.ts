@@ -36,6 +36,15 @@ function normalizeStatus(status: string, expiresAt: string | null): AccountSubsc
   return "active";
 }
 
+export function formatRemainingTime(expiresAt: string) {
+  const diff = new Date(expiresAt).getTime() - Date.now();
+  if (diff <= 0) return "已到期";
+
+  const minutes = Math.floor(diff / 60000);
+  const seconds = Math.floor((diff % 60000) / 1000);
+  return `${minutes} 分 ${seconds} 秒`;
+}
+
 export async function getCurrentUserSubscription(): Promise<AccountSubscription | null> {
   const session = await getCurrentSession();
   if (!session?.userId) return null;

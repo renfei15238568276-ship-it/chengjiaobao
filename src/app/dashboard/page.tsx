@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ProtectedShell } from "@/components/protected-shell";
+import { getCurrentSession } from "@/lib/auth";
 import { getDashboardHighlights, listCustomers } from "@/lib/customer-service";
-import { getLatestMembership } from "@/lib/membership-store";
+import { formatRemainingTime, getCurrentUserSubscription } from "@/lib/subscription-service";
 
 const todo = [
   "补逾期客户的跟进记录",
@@ -23,7 +24,12 @@ const stageColors: Record<string, string> = {
 };
 
 export default async function DashboardPage() {
-  const [summary, customers, latestMembership] = await Promise.all([getDashboardHighlights(), listCustomers(), getLatestMembership()]);
+  const [session, subscription, summary, customers] = await Promise.all([
+    getCurrentSession(),
+    getCurrentUserSubscription(),
+    getDashboardHighlights(),
+    listCustomers(),
+  ]);
 
   const funnelMap = customers.reduce<Record<string, number>>((acc, item) => {
     acc[item.stage] = (acc[item.stage] ?? 0) + 1;
@@ -47,6 +53,8 @@ export default async function DashboardPage() {
       ai: item.aiHistory?.[0]?.content ? "已有 AI 生成记录" : "建议尽快生成成交话术",
     }));
 
+  const showPayments = session?.role === "admin";
+
   return (
     <ProtectedShell>
       <AppShell
@@ -60,13 +68,21 @@ export default async function DashboardPage() {
         </>
       }
     >
-      {latestMembership ? (
+      {session?.role === "admin" ? (
         <section className="mb-6 rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-800 shadow-sm">
-          当前会员：{latestMembership.customerName} · {latestMembership.plan === "personal" ? "个人版" : latestMembership.plan === "team" ? "团队版" : "私有部署版"} · 到期时间 {new Date(latestMembership.expiresAt).toLocaleString("zh-CN")}
+          当前是管理员账号，可直接进入用户开通和收款审核后台。
+        </section>
+      ) : subscription?.planCode === "trial" && subscription.expiresAt && subscription.status === "active" ? (
+        <section className="mb-6 rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-800 shadow-sm">
+          当前为试用版，剩余 {formatRemainingTime(subscription.expiresAt)}。试用到期后，核心功能将受限，请尽快去付款开通。
+        </section>
+      ) : subscription?.status === "active" ? (
+        <section className="mb-6 rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-800 shadow-sm">
+          当前套餐：{subscription.planName} · 到期时间 {subscription.expiresAt ? new Date(subscription.expiresAt).toLocaleString("zh-CN") : "未设置"}
         </section>
       ) : (
         <section className="mb-6 rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-800 shadow-sm">
-          当前还没有开通中的会员。你可以去“收款审核”页把付款申请直接开通。
+          当前账号未开通套餐，请先前往付款开通页完成开通。
         </section>
       )}
 
@@ -132,7 +148,7 @@ export default async function DashboardPage() {
             <Link href="/customers" className="rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:bg-slate-50">客户列表</Link>
             <Link href="/customers/new" className="rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:bg-slate-50">录入客户</Link>
             <Link href="/ai" className="rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:bg-slate-50">AI 助手</Link>
-            <Link href="/payments" className="rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:bg-slate-50">收款审核</Link>
+            {showPayments ? <Link href="/payments" className="rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:bg-slate-50">收款审核</Link> : null}
           </div>
         </div>
         <div className="flex items-center justify-between">
