@@ -2,6 +2,8 @@ import { createHash } from "crypto";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import type { RegisterInput } from "@/lib/register-schema";
 
+const TRIAL_MINUTES = 10;
+
 type UserRow = {
   id: string;
   username: string;
@@ -60,6 +62,22 @@ export async function registerUser(input: RegisterInput) {
 
   if (error || !data) {
     throw error ?? new Error("Failed to register user");
+  }
+
+  const startsAt = new Date();
+  const expiresAt = new Date(startsAt.getTime() + TRIAL_MINUTES * 60 * 1000);
+
+  const { error: subscriptionError } = await admin.from("subscriptions").insert({
+    user_id: data.id,
+    plan_code: "trial",
+    plan_name: `试用版（${TRIAL_MINUTES}分钟）`,
+    status: "active",
+    starts_at: startsAt.toISOString(),
+    expires_at: expiresAt.toISOString(),
+  });
+
+  if (subscriptionError) {
+    throw subscriptionError;
   }
 
   return {

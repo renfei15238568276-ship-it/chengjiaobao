@@ -12,7 +12,7 @@ export default function RegisterPage() {
           <div className="mt-8 space-y-3 text-sm text-white/70">
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">注册后会写入 Supabase 的 users 表</div>
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">默认角色：user</div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">默认状态：active（未开通前不能白用核心功能）</div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">注册即送 10 分钟试用，到期后核心功能自动受限</div>
           </div>
         </section>
         <section className="px-8 py-10 lg:px-10 lg:py-12">

@@ -11,6 +11,11 @@ const subscriptionStatusLabel = {
   cancelled: "已取消",
 };
 
+function getSubscriptionHint(planCode?: string) {
+  if (planCode === "trial") return "当前是试用版，到期后核心功能会自动受限。";
+  return "已开通用户可以正常使用核心功能。";
+}
+
 export default async function SettingsPage() {
   const [session, subscription] = await Promise.all([getCurrentSession(), getCurrentUserSubscription()]);
 
@@ -42,6 +47,7 @@ export default async function SettingsPage() {
                 <div className="rounded-2xl border border-slate-200 px-4 py-3">
                   <p className="text-sm text-slate-500">当前套餐</p>
                   <p className="mt-1 font-medium text-slate-900">{subscription.planName}</p>
+                  <p className="mt-2 text-sm text-slate-500">{getSubscriptionHint(subscription.planCode)}</p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 px-4 py-3">
                   <p className="text-sm text-slate-500">开通状态</p>

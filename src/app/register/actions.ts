@@ -49,7 +49,7 @@ export async function registerAction(
 
   return {
     success: true,
-    message: `注册成功：${result.user.username}。下一步接登录。`,
+    message: `注册成功：${result.user.username}。已自动送你 10 分钟试用，先去登录体验。`,
     values: {
       username: "",
       displayName: "",
