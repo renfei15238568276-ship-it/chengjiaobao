@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { ProtectedShell } from "@/components/protected-shell";
 import { listCustomers } from "@/lib/customer-service";
+import { hasActiveSubscription } from "@/lib/subscription-service";
 
 const stageTabs = ["全部", "新线索", "已联系", "意向中", "报价中", "谈判中", "待成交", "已成交", "已流失"];
 const sourceTabs = ["全部", "微信", "Telegram", "转介绍", "抖音", "小红书", "线下", "其它"];
@@ -11,6 +13,11 @@ export default async function CustomersPage({
 }: {
   searchParams?: Promise<{ created?: string; q?: string; stage?: string; source?: string }>;
 }) {
+  const active = await hasActiveSubscription();
+  if (!active) {
+    redirect("/pay");
+  }
+
   const customers = await listCustomers();
   const params = await searchParams;
   const created = params?.created;

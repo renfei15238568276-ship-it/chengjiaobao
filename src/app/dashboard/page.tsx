@@ -3,7 +3,8 @@ import { AppShell } from "@/components/app-shell";
 import { ProtectedShell } from "@/components/protected-shell";
 import { getCurrentSession } from "@/lib/auth";
 import { getDashboardHighlights, listCustomers } from "@/lib/customer-service";
-import { formatRemainingTime, getCurrentUserSubscription } from "@/lib/subscription-service";
+import { formatRemainingTime, getCurrentUserSubscription, hasActiveSubscription } from "@/lib/subscription-service";
+import { redirect } from "next/navigation";
 
 const todo = [
   "补逾期客户的跟进记录",
@@ -24,6 +25,11 @@ const stageColors: Record<string, string> = {
 };
 
 export default async function DashboardPage() {
+  const active = await hasActiveSubscription();
+  if (!active) {
+    redirect("/pay");
+  }
+
   const [session, subscription, summary, customers] = await Promise.all([
     getCurrentSession(),
     getCurrentUserSubscription(),

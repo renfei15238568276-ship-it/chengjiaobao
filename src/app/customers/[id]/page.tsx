@@ -1,11 +1,18 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { ProtectedShell } from "@/components/protected-shell";
 import { getCustomerById } from "@/lib/customer-service";
+import { hasActiveSubscription } from "@/lib/subscription-service";
 import { DeleteCustomerButton } from "@/app/customers/delete-button";
 import { FollowUpForm } from "./follow-up-form";
 
 export default async function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const active = await hasActiveSubscription();
+  if (!active) {
+    redirect("/pay");
+  }
+
   const { id } = await params;
   const customer = await getCustomerById(id);
 
