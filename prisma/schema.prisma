@@ -1,0 +1,143 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ SaaS Multi-Tenant Models ============
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  plan        Plan     @default(FREE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  members     OrganizationMember[]
+  customers   Customer[]
+  aiChats     AIChat[]
+}
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  passwordHash  String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  memberships   OrganizationMember[]
+  createdChats AIChat[]
+}
+
+// Organization + User many-to-many
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  role           MemberRole   @default(MEMBER)
+  createdAt      DateTime     @default(now())
+  
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([organizationId, userId])
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+// ============ CRM Models ============
+
+enum CustomerStage {
+  LEAD
+  CONTACTED
+  INTERESTED
+  QUOTING
+  NEGOTIATING
+  READY_TO_CLOSE
+  WON
+  LOST
+}
+
+enum FollowUpType {
+  CALL
+  CHAT
+  MEETING
+  QUOTE
+  AFTER_SALES
+  VISIT
+  OTHER
+}
+
+model Customer {
+  id              String             @id @default(cuid())
+  organizationId  String
+  name            String
+  company         String?
+  phone           String?
+  email           String?
+  contactHandle   String?            //微信等社交账号
+  source          String?
+  stage           CustomerStage      @default(LEAD)
+  probability     Int                @default(0)
+  estimatedAmount Float?
+  nextFollowUpAt  DateTime?
+  note            String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  
+  organization    Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  followUps       CustomerFollowUp[]
+}
+
+model CustomerFollowUp {
+  id             String       @id @default(cuid())
+  customerId     String
+  followUpType   FollowUpType @default(CHAT)
+  content        String
+  createdAt      DateTime     @default(now())
+  
+  customer       Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+// ============ AI Chat Models ============
+
+model AIChat {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  title          String
+  createdAt      DateTime @default(now())
+  
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  messages       AIMessage[]
+}
+
+model AIMessage {
+  id        String   @id @default(cuid())
+  chatId    String
+  role      String   // user / assistant
+  content   String
+  createdAt DateTime @default(now())
+  
+  chat      AIChat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+}
