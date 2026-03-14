@@ -1,38 +1,87 @@
 "use server";
 
-import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+
+const USERS_FILE = path.join(process.cwd(), 'data', 'users.json');
+const SUBSCRIPTIONS_FILE = path.join(process.cwd(), 'data', 'subscriptions.json');
+
+function getUsers() {
+  try {
+    if (fs.existsSync(USERS_FILE)) {
+      return JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'))
+    }
+  } catch (e) {}
+  return []
+}
+
+function saveUsers(users: any[]) {
+  const dir = path.dirname(USERS_FILE)
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true })
+  }
+  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2))
+}
+
+function getSubscriptions() {
+  try {
+    if (fs.existsSync(SUBSCRIPTIONS_FILE)) {
+      return JSON.parse(fs.readFileSync(SUBSCRIPTIONS_FILE, 'utf-8'))
+    }
+  } catch (e) {}
+  return []
+}
+
+function saveSubscriptions(subs: any[]) {
+  const dir = path.dirname(SUBSCRIPTIONS_FILE)
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true })
+  }
+  fs.writeFileSync(SUBSCRIPTIONS_FILE, JSON.stringify(subs, null, 2))
+}
 
 export async function getAllUsers() {
-  const admin = getSupabaseAdmin();
-  const { data: users } = await admin
-    .from("users")
-    .select("id, username, display_name, email, role, created_at")
-    .order("created_at", { ascending: false });
-  return users || [];
+  const users = getUsers();
+  return users.map(u => ({
+    id: u.id,
+    username: u.username,
+    display_name: u.displayName,
+    email: null,
+    role: u.role,
+    created_at: u.createdAt,
+  }));
 }
 
 export async function updateUserRole(userId: string, role: string) {
-  const admin = getSupabaseAdmin();
-  const { error } = await admin
-    .from("users")
-    .update({ role })
-    .eq("id", userId);
-  return { ok: !error, error };
+  const users = getUsers();
+  const user = users.find(u => u.id === userId);
+  if (user) {
+    user.role = role;
+    saveUsers(users);
+    return { ok: true, error: null };
+  }
+  return { ok: false, error: 'User not found' };
 }
 
 export async function createSubscriptionForUser(userId: string, planCode: string) {
-  const admin = getSupabaseAdmin();
+  const subscriptions = getSubscriptions();
   const now = new Date().toISOString();
-  const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
+  const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
   
-  const { error } = await admin.from("subscriptions").insert({
+  const subscription = {
+    id: 'sub_' + Date.now(),
     user_id: userId,
     plan_code: planCode,
-    plan_name: planCode === "personal" ? "个人版" : planCode === "team" ? "团队版" : "私有部署版",
-    status: "active",
+    plan_name: planCode === 'personal' ? '个人版' : planCode === 'team' ? '团队版' : '私有部署版',
+    status: 'active',
     starts_at: now,
     expires_at: expires,
-  });
+    created_at: now,
+  };
   
-  return { ok: !error, error };
+  subscriptions.push(subscription);
+  saveSubscriptions(subscriptions);
+  
+  return { ok: true, error: null };
 }

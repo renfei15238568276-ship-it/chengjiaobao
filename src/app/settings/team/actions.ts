@@ -1,7 +1,28 @@
 "use server";
 
 import { getCurrentUser } from "@/lib/auth";
-import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { 
+  getUserOrganization, 
+  getOrganizationMembers, 
+  addOrganizationMember, 
+  removeOrganizationMember,
+  updateMemberRole,
+  getOrganizations
+} from "@/lib/file-orgs";
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+
+const USERS_FILE = path.join(process.cwd(), 'data', 'users.json');
+
+function getUsers() {
+  try {
+    if (fs.existsSync(USERS_FILE)) {
+      return JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'))
+    }
+  } catch (e) {}
+  return []
+}
 
 export { getCurrentUser };
 
@@ -9,110 +30,74 @@ export async function getTeamMembers() {
   const user = await getCurrentUser();
   if (!user) return [];
   
-  const admin = getSupabaseAdmin();
-
-  // Get user's organization
-  const { data: membership } = await admin
-    .from("organization_members")
-    .select("organization_id, role")
-    .eq("user_id", user.id)
-    .single();
-
-  if (!membership) {
-    return [];
-  }
-
-  // Get all members of the organization
-  const { data: members } = await admin
-    .from("organization_members")
-    .select("*, user:users(id, username, display_name, email, created_at)")
-    .eq("organization_id", membership.organization_id)
-    .order("created_at", { ascending: true });
-
-  return members || [];
+  const organization = getUserOrganization(user.id);
+  if (!organization) return [];
+  
+  const memberships = getOrganizationMembers(organization.id);
+  
+  const users = getUsers();
+  
+  return memberships.map(m => {
+    const u = users.find(u => u.id === m.userId);
+    return {
+      id: m.id,
+      organization_id: m.organizationId,
+      user_id: m.userId,
+      role: m.role,
+      created_at: m.createdAt,
+      user: u ? {
+        id: u.id,
+        username: u.username,
+        display_name: u.displayName,
+        email: null,
+        created_at: u.createdAt
+      } : null
+    };
+  });
 }
 
 export async function inviteTeamMember(email: string, role: string) {
   const user = await getCurrentUser();
   if (!user) return { ok: false, message: "Not authenticated" };
   
-  const admin = getSupabaseAdmin();
-
-  // Get user's organization
-  const { data: membership } = await admin
-    .from("organization_members")
-    .select("organization_id, role")
-    .eq("user_id", user.id)
-    .single();
-
-  if (!membership) {
+  const organization = getUserOrganization(user.id);
+  if (!organization) {
     return { ok: false, message: "No organization found" };
   }
-
-  // Only owners and admins can invite
-  if (!["owner", "admin"].includes(membership.role)) {
-    return { ok: false, message: "No permission to invite members" };
-  }
-
-  // Check if user already exists
-  const { data: existingUser } = await admin
-    .from("users")
-    .select("id")
-    .eq("email", email)
-    .single();
-
+  
+  // Find user by email/username
+  const users = getUsers();
+  const existingUser = users.find(u => u.username === email || u.email === email);
+  
   if (existingUser) {
-    // Add existing user to organization
-    const { error } = await admin
-      .from("organization_members")
-      .insert({
-        organization_id: membership.organization_id,
-        user_id: existingUser.id,
-        role,
-      });
-
-    if (error) {
-      return { ok: false, message: error.message };
-    }
-
+    addOrganizationMember(organization.id, existingUser.id, role);
     return { ok: true, message: "Team member added!" };
   }
-
-  // TODO: Send invitation email
-  return { ok: true, message: "Invitation sent (setup pending)" };
+  
+  return { ok: true, message: "User not found. They need to register first." };
 }
 
 export async function removeTeamMember(memberId: string) {
   const user = await getCurrentUser();
   if (!user) return { ok: false, message: "Not authenticated" };
   
-  const admin = getSupabaseAdmin();
-
-  // Get user's organization
-  const { data: membership } = await admin
-    .from("organization_members")
-    .select("organization_id, role")
-    .eq("user_id", user.id)
-    .single();
-
-  if (!membership) {
+  const organization = getUserOrganization(user.id);
+  if (!organization) {
     return { ok: false, message: "No organization found" };
   }
-
-  // Only owners and admins can remove
-  if (!["owner", "admin"].includes(membership.role)) {
-    return { ok: false, message: "No permission to remove members" };
+  
+  const memberships = getOrganizationMembers(organization.id);
+  const membership = memberships.find(m => m.id === memberId);
+  
+  if (!membership) {
+    return { ok: false, message: "Member not found" };
   }
-
-  const { error } = await admin
-    .from("organization_members")
-    .delete()
-    .eq("id", memberId);
-
-  if (error) {
-    return { ok: false, message: error.message };
+  
+  if (membership.role === 'owner') {
+    return { ok: false, message: "Cannot remove owner" };
   }
-
+  
+  removeOrganizationMember(memberId);
   return { ok: true, message: "Team member removed" };
 }
 
@@ -120,32 +105,18 @@ export async function updateMemberRole(memberId: string, newRole: string) {
   const user = await getCurrentUser();
   if (!user) return { ok: false, message: "Not authenticated" };
   
-  const admin = getSupabaseAdmin();
-
-  // Get user's organization
-  const { data: membership } = await admin
-    .from("organization_members")
-    .select("organization_id, role")
-    .eq("user_id", user.id)
-    .single();
-
-  if (!membership) {
+  const organization = getUserOrganization(user.id);
+  if (!organization) {
     return { ok: false, message: "No organization found" };
   }
-
-  // Only owners can change roles
-  if (membership.role !== "owner") {
+  
+  const memberships = getOrganizationMembers(organization.id);
+  const currentMembership = memberships.find(m => m.userId === user.id);
+  
+  if (!currentMembership || currentMembership.role !== 'owner') {
     return { ok: false, message: "Only owner can change roles" };
   }
-
-  const { error } = await admin
-    .from("organization_members")
-    .update({ role: newRole })
-    .eq("id", memberId);
-
-  if (error) {
-    return { ok: false, message: error.message };
-  }
-
+  
+  updateMemberRole(memberId, newRole);
   return { ok: true, message: "Role updated" };
 }

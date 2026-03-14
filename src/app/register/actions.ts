@@ -1,6 +1,7 @@
 "use server";
 
 import { registerSchema } from "@/lib/register-schema";
+import { createOrganization } from "@/lib/file-orgs";
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
@@ -70,13 +71,17 @@ export async function registerAction(
 
   // Create new user (local mode)
   const userId = 'user_' + Date.now();
+  
+  // Create organization using file storage
+  const { organization } = createOrganization(parsed.data.organizationName, userId);
+  
   const newUser = {
     id: userId,
     username: parsed.data.username,
     displayName: parsed.data.displayName,
     passwordHash: hashPassword(parsed.data.password),
     organizationName: parsed.data.organizationName,
-    organizationId: 'org_' + Date.now(),
+    organizationId: organization.id,
     role: 'owner',
     createdAt: new Date().toISOString()
   };
