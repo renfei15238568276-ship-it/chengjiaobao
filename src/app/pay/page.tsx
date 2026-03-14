@@ -3,12 +3,6 @@ import { getCurrentSession } from "@/lib/auth";
 import Image from "next/image";
 import { PaymentForm } from "./payment-form";
 
-export default async function PayPage() {
-  const session = await getCurrentSession();
-  if (session?.role !== "admin") {
-    redirect("/dashboard");
-  }
-
 const plans = [
   {
     key: "personal",
@@ -37,16 +31,21 @@ const payQRCodes = [
   {
     title: "支付宝支付",
     image: "/payments/wechat.jpg",
-    hint: "请使用支付宝扫码付款，付款时备注“成交宝+手机号”。",
+    hint: "请使用支付宝扫码付款，付款时备注「成交宝+手机号」。",
   },
   {
     title: "微信支付",
     image: "/payments/alipay.jpg",
-    hint: "请使用微信扫码付款，付款时备注“成交宝+手机号”。",
+    hint: "请使用微信扫码付款，付款时备注「成交宝+手机号」。",
   },
 ];
 
-export default function PayPage() {
+export default async function PayPage() {
+  const session = await getCurrentSession();
+  if (session?.role !== "admin") {
+    redirect("/dashboard");
+  }
+
   return (
     <main className="min-h-screen bg-[#07111f] text-white">
       <section className="mx-auto max-w-7xl px-6 py-8 lg:px-8 lg:py-10">
