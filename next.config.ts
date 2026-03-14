@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  srcDir: "src",
   // PWA headers
   async headers() {
     return [
