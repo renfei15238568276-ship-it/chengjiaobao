@@ -1,5 +1,13 @@
+import { redirect } from "next/navigation";
+import { getCurrentSession } from "@/lib/auth";
 import Image from "next/image";
 import { PaymentForm } from "./payment-form";
+
+export default async function PayPage() {
+  const session = await getCurrentSession();
+  if (session?.role !== "admin") {
+    redirect("/dashboard");
+  }
 
 const plans = [
   {
