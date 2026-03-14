@@ -28,6 +28,8 @@ export default async function SettingsPage() {
     ["AI Key 状态", process.env.OPENROUTER_API_KEY ? "已配置" : "未配置"],
   ];
 
+  const isAdmin = session?.role === "admin";
+
   return (
     <ProtectedShell>
       <AppShell
@@ -35,6 +37,17 @@ export default async function SettingsPage() {
         title="账户与系统设置"
         description="管理你的账户、团队和套餐状态。"
       >
+        {isAdmin && (
+          <div className="mb-6 rounded-3xl bg-amber-50 p-6 ring-1 ring-amber-200">
+            <p className="text-sm text-amber-700">管理员入口</p>
+            <h2 className="mt-2 text-lg font-semibold text-amber-900">用户管理</h2>
+            <p className="mt-1 text-sm text-amber-700">查看所有注册用户，开通或取消套餐</p>
+            <a href="/admin/users" className="mt-4 inline-block rounded-full bg-amber-400 px-4 py-2 text-sm font-medium text-amber-900 hover:bg-amber-500">
+              进入用户管理
+            </a>
+          </div>
+        )}
+
         <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
             <p className="text-sm text-cyan-700">当前账户</p>
