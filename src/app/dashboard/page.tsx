@@ -60,7 +60,7 @@ export default async function DashboardPage() {
       <AppShell
       eyebrow="成交宝 / 控制台"
       title="客户跟进驾驶舱"
-      description="现在控制台核心数据已经从真实客户数据里计算，不再只是写死的样子货。"
+      description="数据实时更新，成交情况一目了然。"
       actions={
         <>
           <Link href="/" className="rounded-full border border-white/15 px-4 py-2 text-white/80 transition hover:border-white/35 hover:text-white">返回官网</Link>
