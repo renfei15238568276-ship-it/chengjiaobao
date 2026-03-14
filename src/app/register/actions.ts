@@ -1,7 +1,7 @@
 "use server";
 
 import { registerSchema } from "@/lib/register-schema";
-import { registerUser } from "@/lib/user-service";
+import { registerUserWithOrganization } from "@/lib/user-service";
 
 export type RegisterState = {
   success: boolean;
@@ -17,6 +17,7 @@ export async function registerAction(
   const raw = {
     username: String(formData.get("username") ?? ""),
     displayName: String(formData.get("displayName") ?? ""),
+    organizationName: String(formData.get("organizationName") ?? ""),
     password: String(formData.get("password") ?? ""),
     confirmPassword: String(formData.get("confirmPassword") ?? ""),
   };
@@ -32,7 +33,7 @@ export async function registerAction(
     };
   }
 
-  const result = await registerUser(parsed.data);
+  const result = await registerUserWithOrganization(parsed.data);
 
   if (!result.ok) {
     return {
@@ -41,6 +42,7 @@ export async function registerAction(
       values: {
         username: raw.username,
         displayName: raw.displayName,
+        organizationName: raw.organizationName,
         password: "",
         confirmPassword: "",
       },
@@ -49,10 +51,11 @@ export async function registerAction(
 
   return {
     success: true,
-    message: `注册成功：${result.user.username}。已自动送你 10 分钟试用，先去登录体验。`,
+    message: `注册成功！已为你创建"${result.organization.name}"团队，快去登录体验吧！`,
     values: {
       username: "",
       displayName: "",
+      organizationName: "",
       password: "",
       confirmPassword: "",
     },

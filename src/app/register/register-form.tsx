@@ -12,6 +12,7 @@ export function RegisterForm() {
     <form action={formAction} className="space-y-5">
       <Field label="用户名" name="username" defaultValue={state.values?.username} placeholder="至少 3 位，例如 renfei" error={state.errors?.username?.[0]} />
       <Field label="昵称" name="displayName" defaultValue={state.values?.displayName} placeholder="展示给系统看的名字" error={state.errors?.displayName?.[0]} />
+      <Field label="公司/团队名称" name="organizationName" defaultValue={state.values?.organizationName} placeholder="例如：我的公司" error={state.errors?.organizationName?.[0]} />
       <Field label="密码" name="password" type="password" defaultValue={state.values?.password} placeholder="至少 6 位" error={state.errors?.password?.[0]} />
       <Field label="确认密码" name="confirmPassword" type="password" defaultValue={state.values?.confirmPassword} placeholder="再输一次密码" error={state.errors?.confirmPassword?.[0]} />
 

@@ -8,6 +8,9 @@ const nav: { href: string; label: string; adminOnly?: boolean }[] = [
   { href: "/customers/new", label: "新建客户" },
   { href: "/ai", label: "AI 助手" },
   { href: "/pay", label: "付款开通" },
+  { href: "/pricing", label: "套餐" },
+  { href: "/settings/team", label: "团队" },
+  { href: "/settings", label: "设置" },
   { href: "/payments", label: "收款审核", adminOnly: true },
   { href: "/admin/users", label: "用户开通", adminOnly: true },
 ];

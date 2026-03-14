@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ProtectedShell } from "@/components/protected-shell";
 import { getCurrentSession } from "@/lib/auth";
@@ -32,7 +33,7 @@ export default async function SettingsPage() {
       <AppShell
         eyebrow="成交宝 / 设置"
         title="账户与系统设置"
-        description="这一步先把当前用户是谁、套餐状态是什么显示清楚。后面再接管理员开通和到期限制。"
+        description="管理你的账户、团队和套餐状态。"
       >
         <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
@@ -64,9 +65,23 @@ export default async function SettingsPage() {
               </div>
             ) : (
               <div className="mt-6 rounded-2xl border border-dashed border-slate-200 px-4 py-8 text-sm text-slate-500">
-                当前账号还没有套餐记录。下一步我会继续把“管理员开通用户套餐”接上。
+                当前账号还没有套餐记录。下一步我会继续把"管理员开通用户套餐"接上。
               </div>
             )}
+          </div>
+
+          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <p className="text-sm text-cyan-700">团队管理</p>
+            <h2 className="mt-2 text-2xl font-semibold">团队成员</h2>
+            <p className="mt-2 text-sm text-slate-500">
+              邀请团队成员一起跟进客户，管理团队权限
+            </p>
+            <Link
+              href="/settings/team"
+              className="mt-4 inline-flex rounded-xl bg-cyan-400 px-4 py-2 font-medium text-slate-900 hover:bg-cyan-500"
+            >
+              管理团队成员 →
+            </Link>
           </div>
 
           <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
@@ -88,17 +103,6 @@ export default async function SettingsPage() {
             <div className="mt-6">
               <ChangePasswordForm />
             </div>
-          </div>
-
-          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-            <p className="text-sm text-cyan-700">下一步规划</p>
-            <h2 className="mt-2 text-2xl font-semibold">套餐系统 checklist</h2>
-            <ul className="mt-6 space-y-3 text-slate-700">
-              <li className="rounded-2xl bg-slate-50 px-4 py-3">1. 收款审核通过后直接写 subscriptions</li>
-              <li className="rounded-2xl bg-slate-50 px-4 py-3">2. 已过期用户限制 AI / 高级功能</li>
-              <li className="rounded-2xl bg-slate-50 px-4 py-3">3. 补月费 / 年费续费入口</li>
-              <li className="rounded-2xl bg-slate-50 px-4 py-3">4. 后面再补忘记密码 / 重置密码</li>
-            </ul>
           </div>
         </section>
       </AppShell>
