@@ -9,12 +9,9 @@ import { FollowUpForm } from "./follow-up-form";
 
 export default async function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const active = await hasActiveSubscription();
-  if (!active) {
-    redirect("/pay");
-  }
 
   const { id } = await params;
-  const customer = await getCustomerById(id);
+  const customer = active ? await getCustomerById(id) : null;
 
   if (!customer) {
     return (

@@ -14,11 +14,8 @@ export default async function CustomersPage({
   searchParams?: Promise<{ created?: string; q?: string; stage?: string; source?: string }>;
 }) {
   const active = await hasActiveSubscription();
-  if (!active) {
-    redirect("/pay");
-  }
 
-  const customers = await listCustomers();
+  const customers = active ? await listCustomers() : [];
   const params = await searchParams;
   const created = params?.created;
   const q = (params?.q ?? "").trim();

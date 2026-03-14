@@ -26,9 +26,6 @@ const stageColors: Record<string, string> = {
 
 export default async function DashboardPage() {
   const active = await hasActiveSubscription();
-  if (!active) {
-    redirect("/pay");
-  }
 
   const [session, subscription, summary, customers] = await Promise.all([
     getCurrentSession(),
@@ -60,6 +57,24 @@ export default async function DashboardPage() {
     }));
 
   const showPayments = session?.role === "admin";
+
+  if (!active) {
+    return (
+      <ProtectedShell>
+        <AppShell
+          eyebrow="成交宝 / 控制台"
+          title="客户跟进驾驶舱"
+          description="数据实时更新，成交情况一目了然。"
+        >
+          <div className="rounded-3xl border border-amber-200 bg-amber-50 p-8 text-center">
+            <h2 className="text-xl font-semibold text-amber-900">请先开通套餐</h2>
+            <p className="mt-2 text-amber-700">当前账号还未开通套餐，联系管理员开通后可使用完整功能。</p>
+            <a href="/contact" className="mt-4 inline-block rounded-full bg-amber-400 px-6 py-2 text-amber-900 font-medium">联系管理员</a>
+          </div>
+        </AppShell>
+      </ProtectedShell>
+    );
+  }
 
   return (
     <ProtectedShell>
