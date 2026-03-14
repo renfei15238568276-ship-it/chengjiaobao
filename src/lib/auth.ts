@@ -1,6 +1,4 @@
 import { cookies } from "next/headers";
-import { createClient } from '@supabase/supabase-js'
-import { getSupabaseAdmin } from './supabase-admin'
 
 export const AUTH_COOKIE = "chengjiaobao_user";
 export const AUTH_ROLE_COOKIE = "chengjiaobao_role";
@@ -9,13 +7,8 @@ export const AUTH_USER_ID_COOKIE = "chengjiaobao_user_id";
 export const AUTH_ORG_ID_COOKIE = "auth-org-id";
 export const AUTH_ORG_NAME_COOKIE = "auth-org-name";
 
-// Supabase client (for browser)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-export const supabase = (supabaseUrl && supabaseAnonKey) 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null
+// Supabase client (for browser) - not needed for local auth
+export const supabase = null;
 
 export async function isAuthenticated() {
   const cookieStore = await cookies();
@@ -48,7 +41,7 @@ export async function isAdminSession() {
   return session?.role === "admin";
 }
 
-// New functions for SaaS - Get current user with org info
+// Get current user info
 export async function getCurrentUser() {
   const session = await getCurrentSession();
   if (!session) return null;
@@ -62,22 +55,15 @@ export async function getCurrentUser() {
   };
 }
 
-// Get current organization from Supabase
+// Get current organization - simplified for local mode
 export async function getCurrentOrganization() {
   const user = await getCurrentUser()
   if (!user?.organizationId) return null
   
-  try {
-    const admin = getSupabaseAdmin()
-    const { data: membership } = await admin
-      .from('organization_members')
-      .select('*, organization:organizations(*), user:users(*)')
-      .eq('user_id', user.id)
-      .single()
-    
-    return membership
-  } catch (e) {
-    return null
+  // Just return the stored org info
+  return {
+    id: user.organizationId,
+    name: user.organizationName,
   }
 }
 
@@ -85,7 +71,7 @@ export async function getCurrentOrganization() {
 export async function requireOrganization() {
   const org = await getCurrentOrganization()
   if (!org) {
-    throw new Error('No organization found')
+    throw new Error('请先创建团队')
   }
   return org
 }

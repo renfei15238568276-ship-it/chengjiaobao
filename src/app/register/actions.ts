@@ -1,7 +1,32 @@
 "use server";
 
 import { registerSchema } from "@/lib/register-schema";
-import { registerUserWithOrganization } from "@/lib/user-service";
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+
+const USERS_FILE = path.join(process.cwd(), 'data', 'users.json');
+
+function hashPassword(password: string) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+function getUsers() {
+  try {
+    if (fs.existsSync(USERS_FILE)) {
+      return JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'))
+    }
+  } catch (e) {}
+  return []
+}
+
+function saveUsers(users: any[]) {
+  const dir = path.dirname(USERS_FILE)
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true })
+  }
+  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2))
+}
 
 export type RegisterState = {
   success: boolean;
@@ -33,25 +58,35 @@ export async function registerAction(
     };
   }
 
-  const result = await registerUserWithOrganization(parsed.data);
-
-  if (!result.ok) {
+  // Check if user already exists
+  const users = getUsers();
+  if (users.find((u: any) => u.username === parsed.data.username)) {
     return {
       success: false,
-      message: result.message,
-      values: {
-        username: raw.username,
-        displayName: raw.displayName,
-        organizationName: raw.organizationName,
-        password: "",
-        confirmPassword: "",
-      },
+      message: "用户名已经被占了，换一个吧。",
+      values: raw,
     };
   }
 
+  // Create new user (local mode)
+  const userId = 'user_' + Date.now();
+  const newUser = {
+    id: userId,
+    username: parsed.data.username,
+    displayName: parsed.data.displayName,
+    passwordHash: hashPassword(parsed.data.password),
+    organizationName: parsed.data.organizationName,
+    organizationId: 'org_' + Date.now(),
+    role: 'owner',
+    createdAt: new Date().toISOString()
+  };
+
+  users.push(newUser);
+  saveUsers(users);
+
   return {
     success: true,
-    message: `注册成功！已为你创建"${result.organization.name}"团队，快去登录体验吧！`,
+    message: `注册成功！已为你创建"${parsed.data.organizationName}"团队，快去登录体验吧！`,
     values: {
       username: "",
       displayName: "",

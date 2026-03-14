@@ -10,8 +10,24 @@ import {
   AUTH_ORG_ID_COOKIE,
   AUTH_ORG_NAME_COOKIE,
 } from "@/lib/auth";
-import { verifyUserLogin } from "@/lib/user-service";
-import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+
+const USERS_FILE = path.join(process.cwd(), 'data', 'users.json');
+
+function hashPassword(password: string) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+function getUsers() {
+  try {
+    if (fs.existsSync(USERS_FILE)) {
+      return JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'))
+    }
+  } catch (e) {}
+  return []
+}
 
 export type LoginState = {
   success: boolean;
@@ -22,34 +38,27 @@ export async function loginAction(_prevState: LoginState, formData: FormData): P
   const username = String(formData.get("username") ?? "").trim();
   const password = String(formData.get("password") ?? "").trim();
 
-  const user = await verifyUserLogin(username, password);
-
+  // Local file-based login
+  const users = getUsers();
+  const user = users.find((u: any) => u.username === username);
+  
   if (!user) {
     return {
       success: false,
-      message: "账号或密码不对。",
+      message: "用户不存在，请先注册。",
     };
   }
 
-  // Get user's organization
-  let orgId = "";
-  let orgName = "";
-  
-  try {
-    const admin = getSupabaseAdmin()
-    const { data: membership } = await admin
-      .from("organization_members")
-      .select("*, organization:organizations(name)")
-      .eq("user_id", user.id)
-      .single()
-    
-    if (membership) {
-      orgId = membership.organization_id
-      orgName = membership.organization?.name || ""
-    }
-  } catch (e) {
-    // Supabase not configured, continue without org
+  if (user.passwordHash !== hashPassword(password)) {
+    return {
+      success: false,
+      message: "密码不对。",
+    };
   }
+
+  // Get stored org info
+  const orgId = user.organizationId || "";
+  const orgName = user.organizationName || "";
 
   const cookieStore = await cookies();
   const secure = process.env.NODE_ENV === "production";
@@ -64,7 +73,7 @@ export async function loginAction(_prevState: LoginState, formData: FormData): P
   cookieStore.set(AUTH_COOKIE, "1", baseCookie);
   cookieStore.set(AUTH_USER_ID_COOKIE, user.id, baseCookie);
   cookieStore.set(AUTH_USERNAME_COOKIE, user.username, baseCookie);
-  cookieStore.set(AUTH_ROLE_COOKIE, user.role, baseCookie);
+  cookieStore.set(AUTH_ROLE_COOKIE, user.role || "user", baseCookie);
   
   if (orgId) {
     cookieStore.set(AUTH_ORG_ID_COOKIE, orgId, baseCookie);
