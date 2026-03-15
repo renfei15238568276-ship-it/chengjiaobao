@@ -6,8 +6,7 @@ import {
   getOrganizationMembers, 
   addOrganizationMember, 
   removeOrganizationMember,
-  updateMemberRole,
-  getOrganizations
+  updateMemberRole as updateMemberRoleFromFile
 } from "@/lib/file-orgs";
 import fs from 'fs';
 import path from 'path';
@@ -26,7 +25,7 @@ function getUsers() {
 
 export { getCurrentUser };
 
-export async function getTeamMembers() {
+export async function getTeamMembers(): Promise<any[]> {
   const user = await getCurrentUser();
   if (!user) return [];
   
@@ -35,10 +34,10 @@ export async function getTeamMembers() {
   
   const memberships = getOrganizationMembers(organization.id);
   
-  const users = getUsers();
+  const users = getUsers() as any[];
   
-  return memberships.map(m => {
-    const u = users.find(u => u.id === m.userId);
+  return memberships.map((m: any) => {
+    const u = users.find((uu: any) => uu.id === m.userId);
     return {
       id: m.id,
       organization_id: m.organizationId,
@@ -51,7 +50,7 @@ export async function getTeamMembers() {
         display_name: u.displayName,
         email: null,
         created_at: u.createdAt
-      } : null
+      } : { id: '', username: '', display_name: null, email: null, created_at: '' }
     };
   });
 }
@@ -67,7 +66,7 @@ export async function inviteTeamMember(email: string, role: string) {
   
   // Find user by email/username
   const users = getUsers();
-  const existingUser = users.find(u => u.username === email || u.email === email);
+  const existingUser = users.find((u: any) => u.username === email || u.email === email);
   
   if (existingUser) {
     addOrganizationMember(organization.id, existingUser.id, role);

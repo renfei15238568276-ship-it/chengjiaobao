@@ -42,8 +42,8 @@ function saveSubscriptions(subs: any[]) {
 }
 
 export async function getAllUsers() {
-  const users = getUsers();
-  return users.map(u => ({
+  const users = getUsers() as any[];
+  return users.map((u: any) => ({
     id: u.id,
     username: u.username,
     display_name: u.displayName,
@@ -54,8 +54,8 @@ export async function getAllUsers() {
 }
 
 export async function updateUserRole(userId: string, role: string) {
-  const users = getUsers();
-  const user = users.find(u => u.id === userId);
+  const users = getUsers() as any[];
+  const user = users.find((u: any) => u.id === userId);
   if (user) {
     user.role = role;
     saveUsers(users);
@@ -65,7 +65,7 @@ export async function updateUserRole(userId: string, role: string) {
 }
 
 export async function createSubscriptionForUser(userId: string, planCode: string) {
-  const subscriptions = getSubscriptions();
+  const subscriptions = getSubscriptions() as any[];
   const now = new Date().toISOString();
   const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
   
