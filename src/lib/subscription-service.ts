@@ -45,6 +45,17 @@ export function formatRemainingTime(expiresAt: string) {
   return `${minutes} 分 ${seconds} 秒`;
 }
 
+function getDemoSubscription(): AccountSubscription {
+  return {
+    id: "demo",
+    planCode: "demo",
+    planName: "演示版",
+    status: "active",
+    startsAt: null,
+    expiresAt: null,
+  };
+}
+
 export async function getCurrentUserSubscription(): Promise<AccountSubscription | null> {
   const session = await getCurrentSession();
   if (!session?.userId) return null;
@@ -52,17 +63,12 @@ export async function getCurrentUserSubscription(): Promise<AccountSubscription 
 }
 
 export async function getUserSubscription(userId: string): Promise<AccountSubscription | null> {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) {
+  let supabase;
+  try {
+    supabase = getSupabaseAdmin();
+  } catch {
     // Supabase not configured - return demo subscription
-    return {
-      id: "demo",
-      planCode: "demo",
-      planName: "演示版",
-      status: "active",
-      startsAt: null,
-      expiresAt: null,
-    };
+    return getDemoSubscription();
   }
   
   const { data, error } = await supabase
@@ -71,7 +77,7 @@ export async function getUserSubscription(userId: string): Promise<AccountSubscr
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(1)
-    .maybeSingle<SubscriptionRow>();
+    .maybeSingle();
 
   if (error) {
     throw error;

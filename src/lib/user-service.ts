@@ -37,6 +37,7 @@ export function hashPassword(password: string) {
 // New function: Register user with organization
 export async function registerUserWithOrganization(input: RegisterInput) {
   const admin = getSupabaseAdmin();
+  if (!admin) throw new Error("Supabase not configured");
 
   // Check if username exists
   const { data: existing } = await admin
@@ -126,6 +127,7 @@ export async function registerUserWithOrganization(input: RegisterInput) {
 
 export async function registerUser(input: RegisterInput) {
   const admin = getSupabaseAdmin();
+  if (!admin) throw new Error("Supabase not configured");
 
   const { data: existing, error: existingError } = await admin
     .from("users")
@@ -185,6 +187,7 @@ export async function registerUser(input: RegisterInput) {
 
 export async function ensureBuiltinAdmin() {
   const admin = getSupabaseAdmin();
+  if (!admin) throw new Error("Supabase not configured");
   const adminPassword = process.env.ADMIN_PASSWORD ?? "12345678";
 
   const { error } = await admin.from("users").upsert(
@@ -209,6 +212,7 @@ export async function verifyUserLogin(username: string, password: string) {
   }
 
   const admin = getSupabaseAdmin();
+  if (!admin) throw new Error("Supabase not configured");
   const { data, error } = await admin
     .from("users")
     .select("id, username, display_name, role, password_hash")

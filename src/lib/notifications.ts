@@ -24,8 +24,12 @@ export async function getNotifications(limit = 20) {
   const user = await getCurrentUser();
   if (!user) return [];
   
-  const admin = getSupabaseAdmin();
-  if (!admin) return []; // Return empty if not configured
+  let admin;
+  try {
+    admin = getSupabaseAdmin();
+  } catch {
+    return []; // Return empty if not configured
+  }
 
   const { data, error } = await admin
     .from("notifications")
@@ -47,8 +51,12 @@ export async function markNotificationRead(notificationId: string) {
   const user = await getCurrentUser();
   if (!user) return;
   
-  const admin = getSupabaseAdmin();
-  if (!admin) return;
+  let admin;
+  try {
+    admin = getSupabaseAdmin();
+  } catch {
+    return;
+  }
 
   await admin
     .from("notifications")
@@ -62,8 +70,12 @@ export async function markAllNotificationsRead() {
   const user = await getCurrentUser();
   if (!user) return;
   
-  const admin = getSupabaseAdmin();
-  if (!admin) return;
+  let admin;
+  try {
+    admin = getSupabaseAdmin();
+  } catch {
+    return;
+  }
 
   await admin
     .from("notifications")
@@ -80,8 +92,12 @@ export async function createNotification(
   message: string,
   data?: Record<string, any>
 ) {
-  const admin = getSupabaseAdmin();
-  if (!admin) return;
+  let admin;
+  try {
+    admin = getSupabaseAdmin();
+  } catch {
+    return;
+  }
 
   const { error } = await admin.from("notifications").insert({
     user_id: userId,
@@ -99,8 +115,12 @@ export async function createNotification(
 
 // Check and create follow-up reminders
 export async function createFollowUpReminders() {
-  const admin = getSupabaseAdmin();
-  if (!admin) return;
+  let admin;
+  try {
+    admin = getSupabaseAdmin();
+  } catch {
+    return;
+  }
 
   // Find customers with upcoming follow-ups
   const { data: customers } = await admin
@@ -127,8 +147,12 @@ export async function getUnreadNotificationCount() {
   const user = await getCurrentUser();
   if (!user) return 0;
   
-  const admin = getSupabaseAdmin();
-  if (!admin) return 0;
+  let admin;
+  try {
+    admin = getSupabaseAdmin();
+  } catch {
+    return 0;
+  }
 
   const { count } = await admin
     .from("notifications")
