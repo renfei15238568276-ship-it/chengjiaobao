@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npx next build",
+  "buildCommand": "rm -rf node_modules package-lock.json && npm install && npx next build",
   "outputDirectory": ".next",
   "installCommand": "npm install"
 }
