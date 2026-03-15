@@ -1,55 +1,47 @@
-import { redirect } from "next/navigation";
-import { getCurrentSession } from "@/lib/auth";
 import Image from "next/image";
 import { PaymentForm } from "./payment-form";
 
-export default async function PayPage() {
-  const session = await getCurrentSession();
-  if (session?.role !== "admin") {
-    redirect("/dashboard");
-  }
-
-const plans = [
-  {
-    key: "personal",
-    name: "个人版",
-    price: "¥59 / 月",
-    desc: "适合个人销售、顾问、私域成交用户",
-    items: ["客户管理", "跟进记录", "AI 跟进话术", "跟进提醒", "基础数据看板"],
-  },
-  {
-    key: "team",
-    name: "团队版",
-    price: "¥399 / 月",
-    desc: "适合 2-20 人小团队统一管理客户",
-    items: ["多账号协作", "团队客户池", "团队跟进统计", "更高 AI 配额", "权限管理"],
-  },
-  {
-    key: "private",
-    name: "私有部署版",
-    price: "¥2999 起",
-    desc: "适合老板、工作室、公司独立部署使用",
-    items: ["独立部署", "数据独立存储", "可定制 Logo/名称", "部署支持", "适合正式商用"],
-  },
-];
-
-const payQRCodes = [
-  {
-    title: "支付宝支付",
-    image: "/payments/wechat.jpg",
-    hint: "请使用支付宝扫码付款，付款时备注“成交宝+手机号”。",
-  },
-  {
-    title: "微信支付",
-    image: "/payments/alipay.jpg",
-    hint: "请使用微信扫码付款，付款时备注“成交宝+手机号”。",
-  },
-];
-
 export default function PayPage() {
+  const plans = [
+    {
+      key: "personal",
+      name: "个人版",
+      price: "¥59 / 月",
+      desc: "适合个人销售、顾问、私域成交用户",
+      items: ["客户管理", "跟进记录", "AI 跟进话术", "跟进提醒", "基础数据看板"],
+    },
+    {
+      key: "team",
+      name: "团队版",
+      price: "¥399 / 月",
+      desc: "适合 2-20 人小团队统一管理客户",
+      items: ["多账号协作", "团队客户池", "团队跟进统计", "更高 AI 配额", "权限管理"],
+    },
+    {
+      key: "private",
+      name: "私有部署版",
+      price: "¥2999 起",
+      desc: "适合老板、工作室、公司独立部署使用",
+      items: ["独立部署", "数据独立存储", "可定制 Logo/名称", "部署支持", "适合正式商用"],
+    },
+  ];
+
+  const payQRCodes = [
+    {
+      title: "支付宝支付",
+      image: "/payments/wechat.jpg",
+      hint: "请使用支付宝扫码付款，付款时备注"成交宝+手机号"。",
+    },
+    {
+      title: "微信支付",
+      image: "/payments/alipay.jpg",
+      hint: "请使用微信扫码付款，付款时备注"成交宝+手机号"。",
+    },
+  ];
+
   return (
     <main className="min-h-screen bg-[#07111f] text-white">
-      <section className="mx-auto max-w-7xl px-6 py-8 lg:px-8 lg:py-10">
+      <section className="mx-auto max-w-w-7xl px-6 py-8 lg:px-8 lg:py-10">
         <header className="rounded-[32px] border border-white/10 bg-gradient-to-br from-cyan-400/12 to-blue-500/5 p-8 lg:p-10">
           <p className="text-sm uppercase tracking-[0.25em] text-cyan-300/80">成交宝 / 付款开通</p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight lg:text-6xl">开通成交宝会员</h1>
