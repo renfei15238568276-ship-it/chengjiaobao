@@ -1,4 +1,5 @@
 {
   "outputDirectory": ".next",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "cache": false
 }
