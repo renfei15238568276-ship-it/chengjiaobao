@@ -152,3 +152,4 @@ docker compose up -d --build
 2. 确认 OpenRouter key 生效
 3. 用 Docker / VPS 部署
 4. 后续再切数据库和多用户
+// trigger build
