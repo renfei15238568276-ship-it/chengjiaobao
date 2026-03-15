@@ -10,134 +10,126 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============ SaaS Multi-Tenant Models ============
+// ============ Existing Tables (matching Supabase) ============
 
 model Organization {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  plan        Plan     @default(FREE)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  name      String   @map("name")
   
-  members     OrganizationMember[]
-  customers   Customer[]
-  aiChats     AIChat[]
-}
-
-enum Plan {
-  FREE
-  PRO
-  ENTERPRISE
+  @@map("organization")
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  passwordHash  String
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id           String    @id @default(uuid())
+  email        String?   @unique
+  phone        String?
+  username     String?
+  passwordHash String    @map("password_hash")
+  displayName  String?   @map("display_name")
+  role         String    @default("user")
+  status       String    @default("active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @default(now()) @map("updated_at")
   
-  memberships   OrganizationMember[]
-  createdChats AIChat[]
-}
-
-// Organization + User many-to-many
-model OrganizationMember {
-  id             String       @id @default(cuid())
-  organizationId String
-  userId         String
-  role           MemberRole   @default(MEMBER)
-  createdAt      DateTime     @default(now())
-  
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@unique([organizationId, userId])
-}
-
-enum MemberRole {
-  OWNER
-  ADMIN
-  MEMBER
-}
-
-// ============ CRM Models ============
-
-enum CustomerStage {
-  LEAD
-  CONTACTED
-  INTERESTED
-  QUOTING
-  NEGOTIATING
-  READY_TO_CLOSE
-  WON
-  LOST
-}
-
-enum FollowUpType {
-  CALL
-  CHAT
-  MEETING
-  QUOTE
-  AFTER_SALES
-  VISIT
-  OTHER
+  @@map("users")
 }
 
 model Customer {
-  id              String             @id @default(cuid())
-  organizationId  String
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
   name            String
-  company         String?
-  phone           String?
-  email           String?
-  contactHandle   String?            //微信等社交账号
-  source          String?
-  stage           CustomerStage      @default(LEAD)
-  probability     Int                @default(0)
-  estimatedAmount Float?
-  nextFollowUpAt  DateTime?
-  note            String?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  company         String   @default("")
+  contactHandle   String   @default("") @map("contact_handle")
+  source          String   @default("")
+  stage           String   @default("新线索")
+  owner           String   @default("")
+  nextFollowUp    String   @default("") @map("next_follow_up")
+  probability     Int      @default(0)
+  estimatedAmount String   @default("") @map("estimated_amount")
+  tags            Json?
+  note            String   @default("")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @map("updated_at")
   
-  organization    Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  followUps       CustomerFollowUp[]
+  @@map("customers")
 }
 
-model CustomerFollowUp {
-  id             String       @id @default(cuid())
-  customerId     String
-  followUpType   FollowUpType @default(CHAT)
-  content        String
-  createdAt      DateTime     @default(now())
+model FollowUp {
+  id          String   @id @default(uuid())
+  customerId   String   @map("customer_id")
+  userId      String   @map("user_id")
+  type        String   @default("跟进")
+  content     String
+  createdAt   DateTime @default(now()) @map("created_at")
   
-  customer       Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  @@map("follow_ups")
 }
 
-// ============ AI Chat Models ============
-
-model AIChat {
-  id             String   @id @default(cuid())
-  organizationId String
-  userId         String
-  title          String
-  createdAt      DateTime @default(now())
+model AIHistory {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  customerId String?  @map("customer_id")
+  type       String   @default("话术生成")
+  content    String
+  createdAt  DateTime @default(now()) @map("created_at")
   
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  messages       AIMessage[]
+  @@map("ai_histories")
 }
 
-model AIMessage {
-  id        String   @id @default(cuid())
-  chatId    String
-  role      String   // user / assistant
-  content   String
-  createdAt DateTime @default(now())
+model Subscription {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  planCode    String    @map("plan_code")
+  planName    String    @map("plan_name")
+  status      String    @default("pending")
+  startsAt    DateTime? @map("starts_at")
+  expiresAt   DateTime? @map("expires_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @default(now()) @map("updated_at")
   
-  chat      AIChat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  @@map("subscriptions")
+}
+
+model PlanDefinition {
+  id           String  @id @default(uuid())
+  planCode     String  @map("plan_code") @unique
+  planName     String  @map("plan_name")
+  price        Float   @default(0)
+  durationDays Int     @default(30) @map("duration_days")
+  isTeam       Boolean @default(false) @map("is_team")
+  status       String  @default("active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  @@map("plan_definitions")
+}
+
+model PaymentApplication {
+  id            String   @id @default(uuid())
+  userId        String?  @map("user_id")
+  name          String
+  phone         String
+  wechat        String   @default("")
+  planCode      String   @map("plan_code")
+  payMethod     String   @map("pay_method")
+  amount        String
+  paidAt        String   @map("paid_at")
+  screenshotUrl String?  @map("screenshot_url")
+  note          String   @default("")
+  status        String   @default("pending")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @map("updated_at")
+  
+  @@map("payment_applications")
+}
+
+model MembershipLog {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  subscriptionId String?  @map("subscription_id")
+  operatorId     String?  @map("operator_id")
+  action         String
+  note           String   @default("")
+  createdAt      DateTime @default(now()) @map("created_at")
+  
+  @@map("membership_logs")
 }
