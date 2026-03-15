@@ -1,5 +1,4 @@
 {
-  "buildCommand": "rm -rf node_modules package-lock.json && yarn install && yarn build",
   "outputDirectory": ".next",
-  "installCommand": "yarn install"
+  "installCommand": "npm install"
 }
