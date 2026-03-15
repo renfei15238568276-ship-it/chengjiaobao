@@ -1,7 +1,5 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  // PWA headers
+// PWA headers
+const nextConfig = {
   async headers() {
     return [
       {
