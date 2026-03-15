@@ -5,7 +5,8 @@ export function getSupabaseAdmin() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Supabase not configured. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY");
+    console.warn("Supabase not configured. Returning null.");
+    return null;
   }
 
   return createClient(supabaseUrl, serviceRoleKey, {

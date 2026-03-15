@@ -52,7 +52,20 @@ export async function getCurrentUserSubscription(): Promise<AccountSubscription 
 }
 
 export async function getUserSubscription(userId: string): Promise<AccountSubscription | null> {
-  const { data, error } = await getSupabaseAdmin()
+  const supabase = getSupabaseAdmin();
+  if (!supabase) {
+    // Supabase not configured - return demo subscription
+    return {
+      id: "demo",
+      planCode: "demo",
+      planName: "演示版",
+      status: "active",
+      startsAt: null,
+      expiresAt: null,
+    };
+  }
+  
+  const { data, error } = await supabase
     .from("subscriptions")
     .select("id, user_id, plan_code, plan_name, status, starts_at, expires_at, created_at, updated_at")
     .eq("user_id", userId)
@@ -78,15 +91,17 @@ export async function getUserSubscription(userId: string): Promise<AccountSubscr
 
 export async function hasActiveSubscription() {
   const session = await getCurrentSession();
-  if (session?.role === "admin") return true;
-
-  const subscription = await getCurrentUserSubscription();
-  return subscription?.status === "active";
+  if (!session?.userId) return false;
+  
+  const sub = await getUserSubscription(session.userId);
+  if (!sub) return false;
+  
+  return sub.status === "active";
 }
 
 export async function requireActiveSubscription() {
-  const ok = await hasActiveSubscription();
-  if (!ok) {
+  const has = await hasActiveSubscription();
+  if (!has) {
     throw new SubscriptionRequiredError();
   }
 }
