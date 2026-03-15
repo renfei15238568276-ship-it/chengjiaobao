@@ -30,18 +30,18 @@ export default function PayPage() {
     {
       title: "支付宝支付",
       image: "/payments/wechat.jpg",
-      hint: "请使用支付宝扫码付款，付款时备注"成交宝+手机号"。",
+      hint: "请使用支付宝扫码付款，付款时备注 ChengJiaobao+手机号",
     },
     {
       title: "微信支付",
       image: "/payments/alipay.jpg",
-      hint: "请使用微信扫码付款，付款时备注"成交宝+手机号"。",
+      hint: "请使用微信扫码付款，付款时备注 ChengJiaobao+手机号",
     },
   ];
 
   return (
     <main className="min-h-screen bg-[#07111f] text-white">
-      <section className="mx-auto max-w-w-7xl px-6 py-8 lg:px-8 lg:py-10">
+      <section className="mx-auto max-w-7xl px-6 py-8 lg:px-8 lg:py-10">
         <header className="rounded-[32px] border border-white/10 bg-gradient-to-br from-cyan-400/12 to-blue-500/5 p-8 lg:p-10">
           <p className="text-sm uppercase tracking-[0.25em] text-cyan-300/80">成交宝 / 付款开通</p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight lg:text-6xl">开通成交宝会员</h1>
