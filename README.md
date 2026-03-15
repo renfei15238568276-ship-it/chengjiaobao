@@ -153,3 +153,4 @@ docker compose up -d --build
 3. 用 Docker / VPS 部署
 4. 后续再切数据库和多用户
 // trigger build
+# trigger rebuild
