@@ -107,9 +107,6 @@ export async function registerUser(input: RegisterInput) {
   if (error || !data) {
     throw error ?? new Error("Failed to register user");
   }
-    throw subscriptionError;
-  }
-
   return {
     ok: true as const,
     user: data,
