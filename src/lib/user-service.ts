@@ -67,13 +67,13 @@ export async function registerUserWithOrganization(input: RegisterInput) {
 
   // Auto-create free trial subscription (7 days)
   const now = new Date();
-  const trialDays = 7;
+  const trialDays = 1;
   const expiresAt = new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000);
   
   await admin.from("subscriptions").insert({
     user_id: user.id,
     plan_code: "trial",
-    plan_name: `试用版（${trialDays}天）`,
+    plan_name: `试用1天）`,
     status: "active",
     starts_at: now.toISOString(),
     expires_at: expiresAt.toISOString(),
