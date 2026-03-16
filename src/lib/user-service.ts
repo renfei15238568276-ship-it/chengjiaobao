@@ -34,7 +34,7 @@ export function hashPassword(password: string) {
   return createHash("sha256").update(password).digest("hex");
 }
 
-// New function: Register user with organization
+// New function: Register user (simplified - no organization)
 export async function registerUserWithOrganization(input: RegisterInput) {
   const admin = getSupabaseAdmin();
 
@@ -50,29 +50,7 @@ export async function registerUserWithOrganization(input: RegisterInput) {
     return { ok: false as const, message: "用户名已被占用" };
   }
 
-  // Generate slug from organization name
-  const slug = input.organizationName
-    .toLowerCase()
-    .replace(/[^a-z0-9\u4e00-\u9fa5]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "") + "-" + Date.now();
-
-  // Create organization first
-  const { data: org, error: orgError } = await admin
-    .from("organizations")
-    .insert({
-      name: input.organizationName,
-      slug,
-      plan: "free",
-    })
-    .select()
-    .single<OrganizationRow>();
-
-  if (orgError || !org) {
-    return { ok: false as const, message: "创建团队失败: " + orgError?.message };
-  }
-
-  // Create user
+  // Create user only - no organization
   const { data: user, error: userError } = await admin
     .from("users")
     .insert({
@@ -86,41 +64,33 @@ export async function registerUserWithOrganization(input: RegisterInput) {
     .single<UserRow>();
 
   if (userError || !user) {
-    // Rollback organization
-    await admin.from("organizations").delete().eq("id", org.id);
     return { ok: false as const, message: "创建用户失败: " + userError?.message };
   }
 
-  // Add user as owner of organization
-  const { error: memberError } = await admin
-    .from("organization_members")
-    .insert({
-      organization_id: org.id,
-      user_id: user.id,
-      role: "owner",
+  return {
+    ok: true as const,
+    user: {
+      id: user.id,
+      username: user.username,
+      displayName: user.display_name ?? user.username,
+    },
+    organization: { id: "1", name: "默认团队" },
+  };
+}
     });
 
   if (memberError) {
     return { ok: false as const, message: "添加团队成员失败: " + memberError?.message };
   }
 
-  // Create trial subscription
-  const startsAt = new Date();
-  const expiresAt = new Date(startsAt.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
-
-  await admin.from("subscriptions").insert({
-    organization_id: org.id,
-    plan_code: "trial",
-    plan_name: `试用版（${TRIAL_DAYS}天）`,
-    status: "active",
-    starts_at: startsAt.toISOString(),
-    expires_at: expiresAt.toISOString(),
-  });
-
   return {
     ok: true as const,
-    user,
-    organization: org,
+    user: {
+      id: user.id,
+      username: user.username,
+      displayName: user.display_name ?? user.username,
+    },
+    organization: { id: "1", name: "默认团队" },
   };
 }
 
