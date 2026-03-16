@@ -5,6 +5,7 @@ const signupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   name: z.string().min(1),
+  organizationName: z.string().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: {
         'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`,
+        'Authorization': 'Bearer ' + supabaseKey,
         'Content-Type': 'application/json',
         'Prefer': 'return=representation'
       },
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
     })
     
     if (userRes.status === 201) {
-      return NextResponse.json({ success: true, message: 'User created!' })
+      return NextResponse.json({ success: true, message: 'User created! Login now.' })
     }
     
     const err = await userRes.json()
