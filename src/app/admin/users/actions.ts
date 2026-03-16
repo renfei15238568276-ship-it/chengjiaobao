@@ -32,17 +32,40 @@ export async function deleteUser(userId: string) {
 export async function createSubscriptionForUser(userId: string, planCode: string) {
   const admin = getSupabaseAdmin();
   const now = new Date().toISOString();
-  const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+  const planName = planCode === "personal" ? "个人版" : planCode === "team" ? "团队版" : "私有部署版";
   
-  // Create subscription record
-  const { error } = await admin.from("subscriptions").insert({
-    user_id: userId,
-    plan_code: planCode,
-    plan_name: planCode === "personal" ? "个人版" : planCode === "team" ? "团队版" : "私有部署版",
-    status: "active",
-    starts_at: now,
-    expires_at: expires,
-  });
+  // Check if subscription already exists
+  const { data: existing } = await admin
+    .from("subscriptions")
+    .select("id")
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle();
   
-  return { ok: !error, error };
+  if (existing) {
+    // Update existing
+    const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+    const { error } = await admin
+      .from("subscriptions")
+      .update({
+        plan_code: planCode,
+        plan_name: planName,
+        status: "active",
+        expires_at: expires,
+      })
+      .eq("user_id", userId);
+    return { ok: !error, error };
+  } else {
+    // Create new
+    const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+    const { error } = await admin.from("subscriptions").insert({
+      user_id: userId,
+      plan_code: planCode,
+      plan_name: planName,
+      status: "active",
+      starts_at: now,
+      expires_at: expires,
+    });
+    return { ok: !error, error };
+  }
 }
