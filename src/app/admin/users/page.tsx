@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation";
 import { getCurrentSession } from "@/lib/auth";
-import { getAllUsers, updateUserRole, createSubscriptionForUser } from "./actions";
+import { getAllUsers, updateUserRole, deleteUser, createSubscriptionForUser } from "./actions";
 
 export default async function AdminUsersPage() {
   const session = await getCurrentSession();
   
-  // Only admin can access
   if (session?.role !== "admin") {
     redirect("/dashboard");
   }
@@ -55,14 +54,35 @@ export default async function AdminUsersPage() {
                     {new Date(user.created_at).toLocaleDateString("zh-CN")}
                   </td>
                   <td className="px-4 py-3">
-                    <form action={async () => {
-                      "use server";
-                      await createSubscriptionForUser(user.id, "personal");
-                    }}>
-                      <button className="rounded-full bg-emerald-400 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-500">
-                        开通个人版
-                      </button>
-                    </form>
+                    <div className="flex gap-2">
+                      <form action={async () => {
+                        "use server";
+                        await createSubscriptionForUser(user.id, "personal");
+                      }}>
+                        <button className="rounded-full bg-emerald-400 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-500">
+                          开通个人版
+                        </button>
+                      </form>
+                      {user.role !== "admin" && (
+                        <form action={async () => {
+                          "use server";
+                          await updateUserRole(user.id, "admin");
+                        }}>
+                          <button className="rounded-full bg-amber-400 px-3 py-1 text-xs font-medium text-white hover:bg-amber-500">
+                            设为管理员
+                          </button>
+                        </form>
+                      )}
+                      <form action={async () => {
+                        "use server";
+                        await deleteUser(user.id);
+                      }}>
+                        <button className="rounded-full bg-red-400 px-3 py-1 text-xs font-medium text-white hover:bg-red-500" 
+                          onClick={(e) => { if (!confirm("确定删除这个用户吗？")) e.preventDefault(); }}>
+                          删除
+                        </button>
+                      </form>
+                    </div>
                   </td>
                 </tr>
               ))}

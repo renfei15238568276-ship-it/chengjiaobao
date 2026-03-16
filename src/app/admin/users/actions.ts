@@ -20,10 +20,19 @@ export async function updateUserRole(userId: string, role: string) {
   return { ok: !error, error };
 }
 
+export async function deleteUser(userId: string) {
+  const admin = getSupabaseAdmin();
+  const { error } = await admin
+    .from("users")
+    .delete()
+    .eq("id", userId);
+  return { ok: !error, error };
+}
+
 export async function createSubscriptionForUser(userId: string, planCode: string) {
   const admin = getSupabaseAdmin();
   const now = new Date().toISOString();
-  const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
+  const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
   
   const { error } = await admin.from("subscriptions").insert({
     user_id: userId,
