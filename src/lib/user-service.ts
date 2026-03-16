@@ -64,8 +64,6 @@ export async function registerUserWithOrganization(input: RegisterInput) {
     return { ok: false as const, message: "创建用户失败: " + userError?.message };
   }
 
-  });
-
   return {
     ok: true as const,
     user: { id: user.id, username: user.username, displayName: user.display_name ?? user.username },
