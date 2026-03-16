@@ -48,7 +48,7 @@ export default async function CustomersPage({
       <AppShell
         eyebrow="成交宝 / 客户管理"
         title="客户列表"
-        description="支持按关键词、客户阶段和来源筛选，已经开始像真正 CRM 的客户库了。"
+        description="支持按关键词、客户阶段和来源筛选，高效管理客户，快速提升成交转化！"
         actions={
           <>
             <Link href="/dashboard" className="rounded-full border border-white/15 px-4 py-2 text-white/80 transition hover:border-white/35 hover:text-white">返回控制台</Link>
