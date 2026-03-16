@@ -2,7 +2,6 @@ import { createHash } from "crypto";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { registerSchema, type RegisterInput } from "@/lib/register-schema";
 
-const TRIAL_DAYS = 7; // 7 days trial
 
 type UserRow = {
   id: string;
@@ -65,18 +64,6 @@ export async function registerUserWithOrganization(input: RegisterInput) {
     return { ok: false as const, message: "创建用户失败: " + userError?.message };
   }
 
-  // Auto-create free trial subscription (7 days)
-  const now = new Date();
-  const trialDays = 1;
-  const expiresAt = new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000);
-  
-  await admin.from("subscriptions").insert({
-    user_id: user.id,
-    plan_code: "trial",
-    plan_name: `试用1天）`,
-    status: "active",
-    starts_at: now.toISOString(),
-    expires_at: expiresAt.toISOString(),
   });
 
   return {
@@ -122,20 +109,6 @@ export async function registerUser(input: RegisterInput) {
   if (error || !data) {
     throw error ?? new Error("Failed to register user");
   }
-
-  const startsAt = new Date();
-  const expiresAt = new Date(startsAt.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
-
-  const { error: subscriptionError } = await admin.from("subscriptions").insert({
-    user_id: data.id,
-    plan_code: "trial",
-    plan_name: `试用版（${TRIAL_DAYS}天）`,
-    status: "active",
-    starts_at: startsAt.toISOString(),
-    expires_at: expiresAt.toISOString(),
-  });
-
-  if (subscriptionError) {
     throw subscriptionError;
   }
 
