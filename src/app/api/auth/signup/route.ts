@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase'
-import { registerUserWithOrganization } from '@/lib/user-service'
+import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 
 const signupSchema = z.object({
@@ -10,40 +9,53 @@ const signupSchema = z.object({
   organizationName: z.string().min(1),
 })
 
-export async function POST(request: NextRequest) {
-  // Check if Supabase is configured
-  if (!isSupabaseConfigured()) {
-    return NextResponse.json({ 
-      error: 'Supabase not configured. Please set environment variables.' 
-    }, { status: 500 })
-  }
+function hashPassword(password: string): string {
+  // Simple hash for demo - in production use bcrypt
+  return 'hash_' + password
+}
 
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { email, password, name, organizationName } = signupSchema.parse(body)
 
-    // Create user directly without email confirmation (bypass rate limit)
-    const { data: authData, error: authError } = await supabaseAdmin!.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { name }
-    })
+    // Create Supabase client with anon key
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gdzdwwwagueplbignhxy.supabase.co'
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkemR3d3dhZ3VlcGxiaWduaHh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzMTQ1MDksImV4cCI6MjA4ODg5MDUwOX0.sb_publishable_2KndRHYM05SsWTLJx08-4g_tmjYPHQO'
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
-    if (authError) {
-      return NextResponse.json({ error: authError.message }, { status: 400 })
+    // Check if user already exists
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', email.split('@')[0])
+      .single()
+
+    if (existingUser) {
+      return NextResponse.json({ error: 'User already exists' }, { status: 400 })
     }
 
-    const userId = authData.user?.id
-    if (!userId) {
-      return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
-    }
+    // Create user in local users table
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .insert({
+        username: email.split('@')[0],
+        email: email,
+        display_name: name,
+        password_hash: hashPassword(password),
+        role: 'user',
+        status: 'active'
+      })
+      .select()
+      .single()
 
-    // Create slug from organization name
-    const slug = organizationName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now()
+    if (userError) {
+      return NextResponse.json({ error: userError.message }, { status: 500 })
+    }
 
     // Create organization
-    const { data: org, error: orgError } = await supabaseAdmin!
+    const slug = organizationName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now()
+    const { data: org, error: orgError } = await supabase
       .from('organization')
       .insert({
         name: organizationName,
@@ -57,22 +69,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: orgError.message }, { status: 500 })
     }
 
-    // Add user as owner of the organization
-    const { error: memberError } = await supabaseAdmin!
+    // Add user as owner
+    await supabase
       .from('organization_members')
       .insert({
         organization_id: org.id,
-        user_id: userId,
+        user_id: user.id,
         role: 'owner'
       })
 
-    if (memberError) {
-      return NextResponse.json({ error: memberError.message }, { status: 500 })
-    }
-
     return NextResponse.json({
       success: true,
-      user: { id: userId, email },
+      user: { id: user.id, email, name },
       organization: org
     })
   } catch (error: any) {
