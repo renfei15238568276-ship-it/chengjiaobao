@@ -65,6 +65,20 @@ export async function registerUserWithOrganization(input: RegisterInput) {
     return { ok: false as const, message: "创建用户失败: " + userError?.message };
   }
 
+  // Auto-create free trial subscription (7 days)
+  const now = new Date();
+  const trialDays = 7;
+  const expiresAt = new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000);
+  
+  await admin.from("subscriptions").insert({
+    user_id: user.id,
+    plan_code: "trial",
+    plan_name: `试用版（${trialDays}天）`,
+    status: "active",
+    starts_at: now.toISOString(),
+    expires_at: expiresAt.toISOString(),
+  });
+
   return {
     ok: true as const,
     user: { id: user.id, username: user.username, displayName: user.display_name ?? user.username },
