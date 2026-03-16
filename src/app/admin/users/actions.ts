@@ -32,8 +32,9 @@ export async function deleteUser(userId: string) {
 export async function createSubscriptionForUser(userId: string, planCode: string) {
   const admin = getSupabaseAdmin();
   const now = new Date().toISOString();
-  const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
   
+  // Create subscription record
   const { error } = await admin.from("subscriptions").insert({
     user_id: userId,
     plan_code: planCode,
