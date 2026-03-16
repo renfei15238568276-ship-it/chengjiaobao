@@ -5,13 +5,12 @@ const signupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   name: z.string().min(1),
-  organizationName: z.string().min(1),
 })
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password, name, organizationName } = signupSchema.parse(body)
+    const { email, password, name } = signupSchema.parse(body)
 
     const supabaseUrl = 'https://gdzdwwwagueplbignhxy.supabase.co'
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkemR3d3dhZ3VlcGxiaWduaHh5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzMxNDUwOSwiZXhwIjoyMDg4ODkwNTA5fQ.zNbc23CEjpdE1-oS2PAVDuVghCOeEyT4F_qa4vjNX8M'
@@ -19,7 +18,7 @@ export async function POST(request: NextRequest) {
     const username = email.split('@')[0]
     const passwordHash = 'sha256_' + Buffer.from(password).toString('base64')
     
-    // Create user
+    // Create user only
     const userRes = await fetch(`${supabaseUrl}/rest/v1/users`, {
       method: 'POST',
       headers: {
