@@ -5,7 +5,6 @@ const signupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   name: z.string().min(1),
-  organizationName: z.string().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -19,6 +18,7 @@ export async function POST(request: NextRequest) {
     const username = email.split('@')[0]
     const passwordHash = 'sha256_' + Buffer.from(password).toString('base64')
     
+    // Create user only - no organization
     const userRes = await fetch(`${supabaseUrl}/rest/v1/users`, {
       method: 'POST',
       headers: {
