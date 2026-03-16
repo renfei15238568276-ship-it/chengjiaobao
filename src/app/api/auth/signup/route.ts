@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     // Create organization
     const { data: org, error: orgError } = await supabaseAdmin!
-      .from('organizations')
+      .from('organization')
       .insert({
         name: organizationName,
         slug,
