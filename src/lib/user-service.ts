@@ -12,13 +12,6 @@ type UserRow = {
   created_at?: string | null;
 };
 
-type OrganizationRow = {
-  id: string;
-  name: string;
-  slug: string;
-  plan: string;
-};
-
 export type UserSummary = {
   id: string;
   username: string;
@@ -30,59 +23,20 @@ export type UserSummary = {
 
 // Simple hash - just use the password directly as stored
 export function hashPassword(password: string) {
-  // For backward compatibility with existing passwords, support both formats
-  // New format: just the hex string
   return createHash("sha256").update(password).digest("hex");
 }
 
 // Check if password matches (supports both old and new formats)
 export function verifyPasswordHash(storedHash: string, password: string): boolean {
-  const hashed = hashPassword(password);
-  if (storedHash === hashed) return true;
+  // New format: plain hex string
+  const newHash = hashPassword(password);
+  if (storedHash === newHash) return true;
   
-  // Try old format: sha256_ + base64
+  // Old format: sha256_<base64>
   const oldFormat = "sha256_" + Buffer.from(password).toString("base64");
   if (storedHash === oldFormat) return true;
   
   return false;
-}
-
-// Simplified registration - no organization tables
-export async function registerUserWithOrganization(input: RegisterInput) {
-  const admin = getSupabaseAdmin();
-
-  const { data: existing } = await admin
-    .from("users")
-    .select("id")
-    .eq("username", input.username)
-    .limit(1)
-    .maybeSingle();
-
-  if (existing?.id) {
-    return { ok: false as const, message: "用户名已被占用" };
-  }
-
-  const { data: user, error: userError } = await admin
-    .from("users")
-    .insert({
-      username: input.username,
-      password_hash: hashPassword(input.password),
-      display_name: input.displayName,
-      role: "user",
-      status: "active",
-    })
-    .select("id, username, display_name, role")
-    .single<UserRow>();
-
-  if (userError || !user) {
-    return { ok: false as const, message: "创建用户失败: " + userError?.message };
-  }
-
-  return {
-    ok: true as const,
-    user: { id: user.id, username: user.username, displayName: user.display_name ?? user.username },
-    organization: { id: "1", name: "默认团队" },
-  };
 }
 
 export async function registerUser(input: RegisterInput) {
@@ -122,7 +76,6 @@ export async function registerUser(input: RegisterInput) {
   };
 }
 
-// Ensure admin user exists - but don't reset password every time
 export async function ensureBuiltinAdmin() {
   const admin = getSupabaseAdmin();
 
