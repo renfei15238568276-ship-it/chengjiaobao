@@ -30,7 +30,7 @@ export default function PayPage() {
       key: "team",
       name: "团队版",
       price: "¥799/月",
-      yearly: "¥3500/年",
+      priceYearly: "¥3500/年",
       desc: "适合 2-20 人小团队统一管理客户",
       items: ["多账号协作", "团队客户池", "团队跟进统计", "更高 AI 配额", "权限管理"],
     },
