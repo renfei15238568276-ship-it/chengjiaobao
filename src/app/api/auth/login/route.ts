@@ -12,12 +12,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { email, password } = loginSchema.parse(body)
     
-    // Use local login - accept username or email
+    // Accept username or email (take everything before @ if it's an email)
     const username = email.includes('@') ? email.split('@')[0] : email
     const user = await verifyUserLogin(username, password)
     
     if (!user) {
-      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
+      return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 })
     }
     
     return NextResponse.json({
