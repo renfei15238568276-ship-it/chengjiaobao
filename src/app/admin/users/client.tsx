@@ -43,7 +43,7 @@ export default function AdminUsersClient({ usersData, subsData }: { usersData: a
                       <a 
                         key={plan.key}
                         href={`/api/admin/activate?userId=${user.id}&plan=${plan.key}`}
-                        style={{ flex: "1", minWidth: "70px", padding: "0.6rem 0.3rem", fontSize: "0.7rem", fontWeight: "600", color: "white", backgroundColor: plan.color, border: "none", borderRadius: "0.5rem", textAlign: "center", textDecoration: "none", display: "block", cursor: "pointer" }}
+                        style={{ flex: "1", minWidth: "70px", padding: "0.6rem 0.3rem", fontSize: "0.7rem", fontWeight: "600", color: "white", backgroundColor: plan.color, border: "none", borderRadius: "0.5rem", textAlign: "center", textDecoration: "none", display: "block" }}
                       >
                         {plan.name}
                       </a>
@@ -62,7 +62,6 @@ export default function AdminUsersClient({ usersData, subsData }: { usersData: a
                   )}
                   <a 
                     href={`/api/admin/delete?userId=${user.id}`}
-                    onClick={(e) => { if(!confirm("确定删除该用户？此操作不可恢复！")) e.preventDefault(); }}
                     style={{ padding: "0.4rem 0.8rem", fontSize: "0.75rem", fontWeight: "600", color: "white", backgroundColor: "#ef4444", border: "none", borderRadius: "0.5rem", textDecoration: "none" }}
                   >
                     删除用户
