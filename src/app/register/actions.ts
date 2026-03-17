@@ -1,7 +1,7 @@
 "use server";
 
 import { registerSchema } from "@/lib/register-schema";
-import { registerUserWithOrganization } from "@/lib/user-service";
+import { registerUser } from "@/lib/user-service";
 
 export type RegisterState = {
   success: boolean;
@@ -33,7 +33,7 @@ export async function registerAction(
     };
   }
 
-  const result = await registerUserWithOrganization(parsed.data);
+  const result = await registerUser(parsed.data);
 
   if (!result.ok) {
     return {
