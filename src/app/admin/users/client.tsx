@@ -40,25 +40,27 @@ export default function AdminUsersClient({ usersData, subsData }: { usersData: a
                 {!sub && (
                   <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                     {plans.map((plan) => (
-                      <a 
+                      <button 
                         key={plan.key}
-                        href={`/api/admin/activate?userId=${user.id}&plan=${plan.key}`}
-                        style={{ flex: "1", minWidth: "100px", padding: "0.6rem 0.5rem", fontSize: "0.8rem", fontWeight: "600", color: "white", backgroundColor: "#10b981", border: "none", borderRadius: "0.5rem", cursor: "pointer", textAlign: "center", textDecoration: "none", display: "block" }}
+                        type="button"
+                        onClick={() => { window.location.href = `/api/admin/activate?userId=${user.id}&plan=${plan.key}`; }}
+                        style={{ flex: "1", minWidth: "100px", padding: "0.6rem 0.5rem", fontSize: "0.8rem", fontWeight: "600", color: "white", backgroundColor: "#10b981", border: "none", borderRadius: "0.5rem" }}
                       >
                         {plan.price}
-                      </a>
+                      </button>
                     ))}
                   </div>
                 )}
                 
                 {user.role !== "admin" && (
                   <div style={{ marginTop: "0.5rem" }}>
-                    <a 
-                      href={`/api/admin/setadmin?userId=${user.id}`}
-                      style={{ display: "inline-block", padding: "0.5rem 1rem", fontSize: "0.875rem", fontWeight: "600", color: "white", backgroundColor: "#8b5cf6", border: "none", borderRadius: "0.5rem", cursor: "pointer", textDecoration: "none" }}
+                    <button 
+                      type="button"
+                      onClick={() => { window.location.href = `/api/admin/setadmin?userId=${user.id}`; }}
+                      style={{ display: "inline-block", padding: "0.5rem 1rem", fontSize: "0.875rem", fontWeight: "600", color: "white", backgroundColor: "#8b5cf6", border: "none", borderRadius: "0.5rem" }}
                     >
                       设为管理员
-                    </a>
+                    </button>
                   </div>
                 )}
               </div>
