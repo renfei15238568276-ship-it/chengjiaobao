@@ -70,7 +70,7 @@ export default async function SettingsPage() {
               </div>
             ) : (
               <div className="mt-6 rounded-2xl border border-dashed border-slate-200 px-4 py-8 text-sm text-slate-500">
-                当前账号还没有套餐记录。下一步我会继续把"管理员开通用户套餐"接上。
+                暂无套餐信息
               </div>
             )}
           </div>
