@@ -28,7 +28,7 @@ const plans = [
   {
     id: "pro",
     name: "专业版",
-    price: "¥99",
+    price: "¥199",
     period: "/月",
     description: "适合小团队快速增长",
     features: [
