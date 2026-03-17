@@ -1,6 +1,12 @@
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { NextRequest, NextResponse } from "next/server";
 
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage(req: NextRequest) {
+  // Auto-refresh after activation
+  if (req.nextUrl.searchParams.get("activated") || req.nextUrl.searchParams.get("admin") || req.nextUrl.searchParams.get("deleted")) {
+    return NextResponse.redirect(new URL("/admin/users", req.url));
+  }
+
   const admin = getSupabaseAdmin();
   const { data: users } = await admin
     .from("users")
