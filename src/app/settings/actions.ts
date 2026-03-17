@@ -12,6 +12,8 @@ export async function changePasswordAction(
   formData: FormData,
 ): Promise<ChangePasswordState> {
   const session = await getCurrentSession();
+  console.log("Session:", JSON.stringify(session));
+  
   if (!session?.userId || !session?.username) {
     return { success: false, message: "登录状态失效了，请重新登录。" };
   }
@@ -30,12 +32,11 @@ export async function changePasswordAction(
   // Hash password using SHA256
   const passwordHash = await hashPassword(password);
 
-  // Use direct REST API to update password - use username filter
+  // Use direct REST API to update password
   const supabaseUrl = "https://gdzdwwwagueplbignhxy.supabase.co";
   const serviceKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkemR3d3dhZ3VlcGxiaWduaHh5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzMxNDUwOSwiZXhwIjoyMDg4ODkwNTA5fQ.zNbc23CEjpdE1-oS2PAVDuVghCOeEyT4F_qa4vjNX8M";
 
   try {
-    // Update by username instead of userId
     const response = await fetch(`${supabaseUrl}/rest/v1/users?username=eq.${session.username}`, {
       method: "PATCH",
       headers: {
@@ -47,10 +48,12 @@ export async function changePasswordAction(
       body: JSON.stringify({ password_hash: passwordHash }),
     });
 
+    console.log("Password update response:", response.status, response.statusText);
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Password change error:", response.status, errorText);
-      return { success: false, message: `修改密码失败: ${response.status} - ${errorText}` };
+      return { success: false, message: `修改密码失败: ${response.status}` };
     }
 
     return { success: true, message: "密码已更新。" };
