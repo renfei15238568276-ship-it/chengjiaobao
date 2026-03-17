@@ -28,8 +28,23 @@ export type UserSummary = {
   createdAt: string | null;
 };
 
+// Simple hash - just use the password directly as stored
 export function hashPassword(password: string) {
+  // For backward compatibility with existing passwords, support both formats
+  // New format: just the hex string
   return createHash("sha256").update(password).digest("hex");
+}
+
+// Check if password matches (supports both old and new formats)
+export function verifyPasswordHash(storedHash: string, password: string): boolean {
+  const hashed = hashPassword(password);
+  if (storedHash === hashed) return true;
+  
+  // Try old format: sha256_ + base64
+  const oldFormat = "sha256_" + Buffer.from(password).toString("base64");
+  if (storedHash === oldFormat) return true;
+  
+  return false;
 }
 
 // Simplified registration - no organization tables
@@ -111,7 +126,6 @@ export async function registerUser(input: RegisterInput) {
 export async function ensureBuiltinAdmin() {
   const admin = getSupabaseAdmin();
 
-  // Check if admin exists
   const { data: existing } = await admin
     .from("users")
     .select("id, username")
@@ -119,7 +133,6 @@ export async function ensureBuiltinAdmin() {
     .limit(1)
     .maybeSingle();
 
-  // Only create if doesn't exist
   if (!existing) {
     const { error } = await admin.from("users").insert({
       username: "admin",
@@ -152,7 +165,7 @@ export async function verifyUserLogin(username: string, password: string) {
     return null;
   }
 
-  if (data.password_hash !== hashPassword(password)) {
+  if (!verifyPasswordHash(data.password_hash, password)) {
     return null;
   }
 
