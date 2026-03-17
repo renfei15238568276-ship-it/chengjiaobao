@@ -151,7 +151,7 @@ export default async function PricingPage() {
             我们提供灵活的定制方案，满足特殊需求
           </p>
           <a
-            href="mailto:sales@chengjiaobao.com"
+            href="mailto:15238568276@139.com"
             className="mt-4 inline-block rounded-xl border border-white/20 px-6 py-3 font-medium hover:bg-white/10"
           >
             联系销售 →
