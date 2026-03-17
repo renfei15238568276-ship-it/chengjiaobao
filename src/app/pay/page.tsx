@@ -12,6 +12,14 @@ export default function PayPage() {
     },
     {
       key: "personal_quarterly",
+    {
+      key: "personal_yearly",
+      name: "个人版年付",
+      price: "¥2999 / 年",
+      desc: "省 1393 元，相当于每月仅 ¥250",
+      highlight: true,
+      items: ["客户管理", "跟进记录", "AI 跟进话术", "跟进提醒", "基础数据看板"],
+    },
       name: "个人版季付",
       price: "¥599 / 季",
       desc: "省 198 元，相当于每月仅 ¥199",
