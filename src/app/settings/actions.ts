@@ -1,7 +1,6 @@
 "use server";
 
 import { getCurrentSession } from "@/lib/auth";
-import { changePassword } from "@/lib/user-service";
 
 export type ChangePasswordState = {
   success: boolean;
@@ -28,6 +27,34 @@ export async function changePasswordAction(
     return { success: false, message: "两次输入的新密码不一致。" };
   }
 
-  await changePassword(session.userId, password);
+  // Hash password using SHA256
+  const passwordHash = await hashPassword(password);
+
+  // Use direct REST API to update password
+  const supabaseUrl = "https://gdzdwwwagueplbignhxy.supabase.co";
+  const serviceKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkemR3d3dhZ3VlcGxiaWduaHh5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzMxNDUwOSwiZXhwIjoyMDg4ODkwNTA5fQ.zNbc23CEjpdE1-oS2PAVDuVghCOeEyT4F_qa4vjNX8M";
+
+  const response = await fetch(`${supabaseUrl}/rest/v1/users?id=eq.${session.userId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": serviceKey,
+      "Authorization": `Bearer ${serviceKey}`,
+    },
+    body: JSON.stringify({ password_hash: passwordHash }),
+  });
+
+  if (!response.ok) {
+    return { success: false, message: "修改密码失败，请重试。" };
+  }
+
   return { success: true, message: "密码已更新。" };
+}
+
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
