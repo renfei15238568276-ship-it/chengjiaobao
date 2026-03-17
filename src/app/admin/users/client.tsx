@@ -4,11 +4,11 @@ export default function AdminUsersClient({ usersData, subsData }: { usersData: a
   const getSub = (userId: string) => subsData?.find((s: any) => s.user_id === userId);
 
   const plans = [
-    { key: "personal_monthly", name: "个人版月付", price: "¥199/月" },
-    { key: "personal_quarterly", name: "个人版季付", price: "¥599/季" },
-    { key: "personal_yearly", name: "个人版年付", price: "¥2999/年" },
-    { key: "team_monthly", name: "团队版月付", price: "¥799/月" },
-    { key: "team_yearly", name: "团队版年付", price: "¥3500/年" },
+    { key: "personal_monthly", name: "个人月付", price: "¥199", color: "#10b981" },
+    { key: "personal_quarterly", name: "个人季付", price: "¥599", color: "#10b981" },
+    { key: "personal_yearly", name: "个人年付", price: "¥2999", color: "#10b981" },
+    { key: "team_monthly", name: "团队月付", price: "¥799", color: "#3b82f6" },
+    { key: "team_yearly", name: "团队年付", price: "¥3500", color: "#3b82f6" },
   ];
 
   return (
@@ -43,9 +43,9 @@ export default function AdminUsersClient({ usersData, subsData }: { usersData: a
                       key={plan.key}
                       type="button"
                       onClick={() => { window.location.href = `/api/admin/activate?userId=${user.id}&plan=${plan.key}`; }}
-                      style={{ flex: "1", minWidth: "80px", padding: "0.5rem", fontSize: "0.75rem", fontWeight: "600", color: "white", backgroundColor: "#10b981", border: "none", borderRadius: "0.5rem" }}
+                      style={{ flex: "1", minWidth: "70px", padding: "0.5rem 0.3rem", fontSize: "0.7rem", fontWeight: "600", color: "white", backgroundColor: plan.color, border: "none", borderRadius: "0.5rem" }}
                     >
-                      {plan.price}
+                      {plan.name}
                     </button>
                   ))}
                 </div>
