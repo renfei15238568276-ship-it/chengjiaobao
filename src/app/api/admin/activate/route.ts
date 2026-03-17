@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET(req: NextRequest) {
   const userId = req.nextUrl.searchParams.get("userId");
@@ -19,29 +18,34 @@ export async function GET(req: NextRequest) {
 
   const plan = planMap[planCode] || planMap.personal_monthly;
 
-  try {
-    const admin = getSupabaseAdmin();
-    const now = new Date();
-    const expires = new Date(now.getTime() + plan.months * 30 * 24 * 60 * 60 * 1000);
-    
-    // First try to delete any existing subscription
-    await admin.from("subscriptions").delete().eq("user_id", userId);
-    
-    // Then insert new one
-    const { error } = await admin.from("subscriptions").insert({
+  const supabaseUrl = "https://gdzdwwwagueplbignhxy.supabase.co";
+  const serviceKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkemR3d3dhZ3VlcGxiaWduaHh5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzMxNDUwOSwiZXhwIjoyMDg4ODkwNTA5fQ.zNbc23CEjpdE1-oS2PAVDuVghCOeEyT4F_qa4vjNX8M";
+
+  const now = new Date();
+  const expires = new Date(now.getTime() + plan.months * 30 * 24 * 60 * 60 * 1000);
+
+  // Use direct REST API call
+  const response = await fetch(`${supabaseUrl}/rest/v1/subscriptions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": serviceKey,
+      "Authorization": `Bearer ${serviceKey}`,
+      "Prefer": "return=minimal"
+    },
+    body: JSON.stringify({
       user_id: userId,
       plan_code: planCode,
       plan_name: plan.name,
       status: "active",
       starts_at: now.toISOString(),
-      expires_at: expires.toISOString(),
-    });
+      expires_at: expires.toISOString()
+    })
+  });
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  if (!response.ok) {
+    const errorText = await response.text();
+    return NextResponse.json({ error: errorText }, { status: 500 });
   }
 
   return NextResponse.redirect(new URL("/admin/users?activated=true", req.url));
