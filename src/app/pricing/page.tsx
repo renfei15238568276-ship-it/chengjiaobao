@@ -1,3 +1,5 @@
+"use client";
+
 import { AppShell } from "@/components/app-shell";
 
 const plans = [
@@ -64,7 +66,15 @@ const plans = [
   },
 ];
 
-export default async function PricingPage() {
+function copyToClipboard(text: string) {
+  navigator.clipboard.writeText(text).then(() => {
+    alert("已复制: " + text);
+  }).catch(() => {
+    prompt("请复制以下邮箱:", text);
+  });
+}
+
+export default function PricingPage() {
   return (
     <AppShell
       eyebrow="成交宝 / 价格"
@@ -111,12 +121,12 @@ export default async function PricingPage() {
                 当前计划
               </div>
             ) : plan.id === "team" ? (
-              <a
-                href="mailto:15238568276@139.com"
-                className="mt-8 block rounded-xl border border-white/20 bg-white px-4 py-3 text-center font-medium hover:bg-white/10"
+              <button
+                onClick={() => copyToClipboard("15238568276@139.com")}
+                className="mt-8 block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center font-medium hover:bg-slate-100"
               >
-                联系销售 →
-              </a>
+                联系销售
+              </button>
             ) : (
               <a
                 href="/pay"
