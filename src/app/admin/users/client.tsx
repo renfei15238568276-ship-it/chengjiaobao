@@ -1,25 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
-interface User {
-  id: string;
-  username: string;
-  display_name: string | null;
-  email: string | null;
-  role: string;
-  created_at: string;
-}
-
-interface Sub {
-  user_id: string;
-  plan_name: string;
-}
-
-export default function AdminUsersClient({ usersData, subsData }: { usersData: User[], subsData: Sub[] }) {
-  const router = useRouter();
-  
-  const getSub = (userId: string) => subsData?.find(s => s.user_id === userId);
+export default function AdminUsersClient({ usersData, subsData }: { usersData: any[], subsData: any[] }) {
+  const getSub = (userId: string) => subsData?.find((s: any) => s.user_id === userId);
 
   const plans = [
     { key: "personal_monthly", name: "个人版月付", price: "¥199/月" },
@@ -29,28 +11,6 @@ export default function AdminUsersClient({ usersData, subsData }: { usersData: U
     { key: "team_yearly", name: "团队版年付", price: "¥3500/年" },
   ];
 
-  const activate = async (userId: string, plan: string) => {
-    try {
-      const res = await fetch(`/api/admin/activate?userId=${userId}&plan=${plan}`, { method: "GET" });
-      if (res.ok) {
-        router.refresh();
-      }
-    } catch (e) {
-      alert("开通失败");
-    }
-  };
-
-  const setAdmin = async (userId: string) => {
-    try {
-      const res = await fetch(`/api/admin/setadmin?userId=${userId}`, { method: "GET" });
-      if (res.ok) {
-        router.refresh();
-      }
-    } catch (e) {
-      alert("设置失败");
-    }
-  };
-
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#f9fafb", padding: "1rem" }}>
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
@@ -58,7 +18,7 @@ export default function AdminUsersClient({ usersData, subsData }: { usersData: U
         <p style={{ color: "#6b7280", marginTop: "0.5rem" }}>共 {usersData?.length || 0} 个用户</p>
         
         <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          {usersData?.map((user: User) => {
+          {usersData?.map((user: any) => {
             const sub = getSub(user.id);
             return (
               <div key={user.id} style={{ backgroundColor: "white", borderRadius: "0.75rem", padding: "1rem", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
@@ -80,25 +40,25 @@ export default function AdminUsersClient({ usersData, subsData }: { usersData: U
                 {!sub && (
                   <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                     {plans.map((plan) => (
-                      <button 
+                      <a 
                         key={plan.key}
-                        onClick={() => window.open(`/api/admin/activate?userId=${user.id}onClick={() => activate(user.id, plan.key)}plan=${plan.key}`, "_self")}
-                        style={{ flex: "1", minWidth: "100px", padding: "0.6rem 0.5rem", fontSize: "0.8rem", fontWeight: "600", color: "white", backgroundColor: "#10b981", border: "none", borderRadius: "0.5rem", cursor: "pointer" }}
+                        href={`/api/admin/activate?userId=${user.id}&plan=${plan.key}`}
+                        style={{ flex: "1", minWidth: "100px", padding: "0.6rem 0.5rem", fontSize: "0.8rem", fontWeight: "600", color: "white", backgroundColor: "#10b981", border: "none", borderRadius: "0.5rem", cursor: "pointer", textAlign: "center", textDecoration: "none", display: "block" }}
                       >
                         {plan.price}
-                      </button>
+                      </a>
                     ))}
                   </div>
                 )}
                 
                 {user.role !== "admin" && (
                   <div style={{ marginTop: "0.5rem" }}>
-                    <button 
-                      onClick={() => window.open(`/api/admin/setadmin?userId=${user.id}`, "_self")}
-                      style={{ display: "inline-block", padding: "0.5rem 1rem", fontSize: "0.875rem", fontWeight: "600", color: "white", backgroundColor: "#8b5cf6", border: "none", borderRadius: "0.5rem", cursor: "pointer" }}
+                    <a 
+                      href={`/api/admin/setadmin?userId=${user.id}`}
+                      style={{ display: "inline-block", padding: "0.5rem 1rem", fontSize: "0.875rem", fontWeight: "600", color: "white", backgroundColor: "#8b5cf6", border: "none", borderRadius: "0.5rem", cursor: "pointer", textDecoration: "none" }}
                     >
                       设为管理员
-                    </button>
+                    </a>
                   </div>
                 )}
               </div>
