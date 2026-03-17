@@ -42,6 +42,7 @@ export function verifyPasswordHash(storedHash: string, password: string): boolea
 export async function registerUser(input: RegisterInput) {
   const admin = getSupabaseAdmin();
 
+  // Check if username exists
   const { data: existing } = await admin
     .from("users")
     .select("id")
@@ -53,6 +54,7 @@ export async function registerUser(input: RegisterInput) {
     return { ok: false as const, message: "用户名已被占用" };
   }
 
+  // Create new user with hashed password
   const { data: user, error: userError } = await admin
     .from("users")
     .insert({
@@ -74,31 +76,6 @@ export async function registerUser(input: RegisterInput) {
     user: { id: user.id, username: user.username, displayName: user.display_name || user.username },
     organization: { id: "1", name: "默认团队" },
   };
-}
-
-export async function ensureBuiltinAdmin() {
-  const admin = getSupabaseAdmin();
-
-  const { data: existing } = await admin
-    .from("users")
-    .select("id, username")
-    .eq("username", "admin")
-    .limit(1)
-    .maybeSingle();
-
-  if (!existing) {
-    const { error } = await admin.from("users").insert({
-      username: "admin",
-      password_hash: hashPassword("12345678"),
-      display_name: "管理员",
-      role: "admin",
-      status: "active",
-    });
-
-    if (error) {
-      throw error;
-    }
-  }
 }
 
 export async function verifyUserLogin(username: string, password: string) {
