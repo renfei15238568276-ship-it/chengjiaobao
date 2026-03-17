@@ -27,11 +27,18 @@ export default function PayPage() {
       items: ["客户管理", "跟进记录", "AI 跟进话术", "跟进提醒", "基础数据看板"],
     },
     {
-      key: "team",
-      name: "团队版",
-      price: "¥799/月",
-      priceYearly: "¥3500/年",
+      key: "team_monthly",
+      name: "团队版月付",
+      price: "¥799 / 月",
       desc: "适合 2-20 人小团队统一管理客户",
+      items: ["多账号协作", "团队客户池", "团队跟进统计", "更高 AI 配额", "权限管理"],
+    },
+    {
+      key: "team_yearly",
+      name: "团队版年付",
+      price: "¥3500 / 年",
+      desc: "省 1588 元，相当于每月仅 ¥292",
+      highlight: true,
       items: ["多账号协作", "团队客户池", "团队跟进统计", "更高 AI 配额", "权限管理"],
     },
     {
