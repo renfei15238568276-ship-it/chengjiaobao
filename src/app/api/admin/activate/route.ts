@@ -19,18 +19,30 @@ export async function GET(req: NextRequest) {
 
   const plan = planMap[planCode] || planMap.personal_monthly;
 
-  const admin = getSupabaseAdmin();
-  const now = new Date();
-  const expires = new Date(now.getTime() + plan.months * 30 * 24 * 60 * 60 * 1000);
-  
-  await admin.from("subscriptions").upsert({
-    user_id: userId,
-    plan_code: planCode,
-    plan_name: plan.name,
-    status: "active",
-    starts_at: now.toISOString(),
-    expires_at: expires.toISOString(),
-  }, { onConflict: "user_id" });
+  try {
+    const admin = getSupabaseAdmin();
+    const now = new Date();
+    const expires = new Date(now.getTime() + plan.months * 30 * 24 * 60 * 60 * 1000);
+    
+    // First try to delete any existing subscription
+    await admin.from("subscriptions").delete().eq("user_id", userId);
+    
+    // Then insert new one
+    const { error } = await admin.from("subscriptions").insert({
+      user_id: userId,
+      plan_code: planCode,
+      plan_name: plan.name,
+      status: "active",
+      starts_at: now.toISOString(),
+      expires_at: expires.toISOString(),
+    });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 
   return NextResponse.redirect(new URL("/admin/users?activated=true", req.url));
 }
