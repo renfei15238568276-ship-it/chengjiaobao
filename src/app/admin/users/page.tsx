@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import Link from "next/link";
 
 export default async function AdminUsersPage() {
   const admin = getSupabaseAdmin();
@@ -8,31 +9,7 @@ export default async function AdminUsersPage() {
     .select("id, username, display_name, email, role, created_at")
     .order("created_at", { ascending: false });
 
-  const { data: subs } = await admin.from("subscriptions").select("user_id, plan_name, expires_at");
-
-  async function createSubscription(formData: FormData) {
-    "use server";
-    const userId = formData.get("userId") as string;
-    const admin = getSupabaseAdmin();
-    const now = new Date().toISOString();
-    const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
-    
-    await admin.from("subscriptions").upsert({
-      user_id: userId,
-      plan_code: "personal",
-      plan_name: "个人版",
-      status: "active",
-      starts_at: now,
-      expires_at: expires,
-    }, { onConflict: "user_id" });
-  }
-
-  async function setAdmin(formData: FormData) {
-    "use server";
-    const userId = formData.get("userId") as string;
-    const admin = getSupabaseAdmin();
-    await admin.from("users").update({ role: "admin" }).eq("id", userId);
-  }
+  const { data: subs } = await admin.from("subscriptions").select("user_id, plan_name");
 
   const getSub = (userId: string) => subs?.find(s => s.user_id === userId);
 
@@ -63,19 +40,19 @@ export default async function AdminUsersPage() {
                 </div>
                 
                 <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                  <form action={createSubscription} style={{ flex: "1", minWidth: "120px" }}>
-                    <input type="hidden" name="userId" value={user.id} />
-                    <button style={{ width: "100%", padding: "0.75rem", fontSize: "1rem", fontWeight: "600", color: "white", backgroundColor: "#10b981", border: "none", borderRadius: "0.5rem", cursor: "pointer" }}>
-                      开通 ¥199
-                    </button>
-                  </form>
+                  <Link 
+                    href={`/api/admin/activate?userId=${user.id}`}
+                    style={{ flex: "1", minWidth: "120px", padding: "0.75rem", fontSize: "1rem", fontWeight: "600", color: "white", backgroundColor: "#10b981", border: "none", borderRadius: "0.5rem", cursor: "pointer", textAlign: "center", textDecoration: "none", display: "block" }}
+                  >
+                    开通 ¥199
+                  </Link>
                   {user.role !== "admin" && (
-                    <form action={setAdmin} style={{ flex: "1", minWidth: "120px" }}>
-                      <input type="hidden" name="userId" value={user.id} />
-                      <button style={{ width: "100%", padding: "0.75rem", fontSize: "1rem", fontWeight: "600", color: "white", backgroundColor: "#8b5cf6", border: "none", borderRadius: "0.5rem", cursor: "pointer" }}>
-                        设为管理员
-                      </button>
-                    </form>
+                    <Link 
+                      href={`/api/admin/setadmin?userId=${user.id}`}
+                      style={{ flex: "1", minWidth: "120px", padding: "0.75rem", fontSize: "1rem", fontWeight: "600", color: "white", backgroundColor: "#8b5cf6", border: "none", borderRadius: "0.5rem", cursor: "pointer", textAlign: "center", textDecoration: "none", display: "block" }}
+                    >
+                      设为管理员
+                    </Link>
                   )}
                 </div>
               </div>
