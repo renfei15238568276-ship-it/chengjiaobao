@@ -82,7 +82,7 @@ export default function AdminUsersClient({ usersData, subsData }: { usersData: U
                     {plans.map((plan) => (
                       <button 
                         key={plan.key}
-                        onClick={() => activate(user.id, plan.key)}
+                        onClick={() => window.open(`/api/admin/activate?userId=${user.id}onClick={() => activate(user.id, plan.key)}plan=${plan.key}`, "_self")}
                         style={{ flex: "1", minWidth: "100px", padding: "0.6rem 0.5rem", fontSize: "0.8rem", fontWeight: "600", color: "white", backgroundColor: "#10b981", border: "none", borderRadius: "0.5rem", cursor: "pointer" }}
                       >
                         {plan.price}
@@ -94,7 +94,7 @@ export default function AdminUsersClient({ usersData, subsData }: { usersData: U
                 {user.role !== "admin" && (
                   <div style={{ marginTop: "0.5rem" }}>
                     <button 
-                      onClick={() => setAdmin(user.id)}
+                      onClick={() => window.open(`/api/admin/setadmin?userId=${user.id}`, "_self")}
                       style={{ display: "inline-block", padding: "0.5rem 1rem", fontSize: "0.875rem", fontWeight: "600", color: "white", backgroundColor: "#8b5cf6", border: "none", borderRadius: "0.5rem", cursor: "pointer" }}
                     >
                       设为管理员
