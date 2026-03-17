@@ -6,7 +6,7 @@ export default function PayPage() {
     {
       key: "personal",
       name: "个人版",
-      price: "¥59 / 月",
+      price: "¥199 / 月",
       desc: "适合个人销售、顾问、私域成交用户",
       items: ["客户管理", "跟进记录", "AI 跟进话术", "跟进提醒", "基础数据看板"],
     },
