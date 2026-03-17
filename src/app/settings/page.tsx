@@ -14,6 +14,8 @@ const subscriptionStatusLabel = {
 
 function getSubscriptionHint(planCode?: string) {
   if (planCode === "trial") return "当前是试用版，到期后核心功能会自动受限。";
+  if (planCode === "personal_yearly") return "个人版有效期内，AI 功能可正常使用。";
+  if (planCode === "team_yearly") return "团队版有效期内，可邀请团队成员。";
   return "已开通用户可以正常使用核心功能。";
 }
 
@@ -69,8 +71,9 @@ export default async function SettingsPage() {
                 </div>
               </div>
             ) : (
-              <div className="mt-6 rounded-2xl border border-dashed border-slate-200 px-4 py-8 text-sm text-slate-500">
-                暂无套餐信息
+              <div className="mt-6 rounded-2xl border border-dashed border-slate-200 px-4 py-8">
+                <p className="text-center text-slate-500">暂未开通套餐</p>
+                <p className="mt-2 text-center text-sm text-slate-400">联系管理员开通后可使用 AI 等核心功能</p>
               </div>
             )}
           </div>
