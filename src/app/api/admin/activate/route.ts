@@ -24,14 +24,24 @@ export async function GET(req: NextRequest) {
   const now = new Date();
   const expires = new Date(now.getTime() + plan.months * 30 * 24 * 60 * 60 * 1000);
 
-  // Use direct REST API call
+  // First delete existing subscription
+  await fetch(`${supabaseUrl}/rest/v1/subscriptions?user_id=eq.${userId}`, {
+    method: "DELETE",
+    headers: {
+      "apikey": serviceKey,
+      "Authorization": `Bearer ${serviceKey}`,
+      "Prefer": "return=minimal"
+    }
+  });
+
+  // Then insert new one
   const response = await fetch(`${supabaseUrl}/rest/v1/subscriptions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "apikey": serviceKey,
       "Authorization": `Bearer ${serviceKey}`,
-      "Prefer": "return=minimal"
+      "Prefer": "return=representation"
     },
     body: JSON.stringify({
       user_id: userId,
@@ -43,9 +53,10 @@ export async function GET(req: NextRequest) {
     })
   });
 
+  const responseData = await response.text();
+  
   if (!response.ok) {
-    const errorText = await response.text();
-    return NextResponse.json({ error: errorText }, { status: 500 });
+    return NextResponse.json({ error: responseData, status: response.status }, { status: 500 });
   }
 
   return NextResponse.redirect(new URL("/admin/users?activated=true", req.url));
