@@ -20,14 +20,6 @@ function getSubscriptionHint(planCode?: string) {
 export default async function SettingsPage() {
   const [session, subscription] = await Promise.all([getCurrentSession(), getCurrentUserSubscription()]);
 
-  const envSummary = [
-    ["当前登录用户", session?.username ?? "未识别"],
-    ["当前角色", session?.role ?? "未识别"],
-    ["OpenRouter Base URL", process.env.OPENROUTER_BASE_URL || "未配置"],
-    ["OpenRouter Model", process.env.OPENROUTER_MODEL || "未配置"],
-    ["AI Key 状态", process.env.OPENROUTER_API_KEY ? "已配置" : "未配置"],
-  ];
-
   const isAdmin = session?.role === "admin";
 
   return (
@@ -95,19 +87,6 @@ export default async function SettingsPage() {
             >
               管理团队成员 →
             </Link>
-          </div>
-
-          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-            <p className="text-sm text-cyan-700">当前环境</p>
-            <h2 className="mt-2 text-2xl font-semibold">运行配置摘要</h2>
-            <div className="mt-6 space-y-3">
-              {envSummary.map(([label, value]) => (
-                <div key={label} className="rounded-2xl border border-slate-200 px-4 py-3">
-                  <p className="text-sm text-slate-500">{label}</p>
-                  <p className="mt-1 font-medium text-slate-900">{value}</p>
-                </div>
-              ))}
-            </div>
           </div>
 
           <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
