@@ -4,10 +4,18 @@ import { PaymentForm } from "./payment-form";
 export default function PayPage() {
   const plans = [
     {
-      key: "personal",
-      name: "个人版",
+      key: "personal_monthly",
+      name: "个人版月付",
       price: "¥199 / 月",
       desc: "适合个人销售、顾问、私域成交用户",
+      items: ["客户管理", "跟进记录", "AI 跟进话术", "跟进提醒", "基础数据看板"],
+    },
+    {
+      key: "personal_quarterly",
+      name: "个人版季付",
+      price: "¥599 / 季",
+      desc: "省 198 元，相当于每月仅 ¥199",
+      highlight: true,
       items: ["客户管理", "跟进记录", "AI 跟进话术", "跟进提醒", "基础数据看板"],
     },
     {
