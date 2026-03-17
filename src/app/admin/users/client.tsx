@@ -37,36 +37,36 @@ export default function AdminUsersClient({ usersData, subsData }: { usersData: a
                   </div>
                 </div>
                 
-                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                  {!sub && plans.map((plan) => (
-                    <button 
-                      key={plan.key}
-                      type="button"
-                      onClick={() => { window.location.href = `/api/admin/activate?userId=${user.id}&plan=${plan.key}`; }}
-                      style={{ flex: "1", minWidth: "70px", padding: "0.5rem 0.3rem", fontSize: "0.7rem", fontWeight: "600", color: "white", backgroundColor: plan.color, border: "none", borderRadius: "0.5rem" }}
-                    >
-                      {plan.name}
-                    </button>
-                  ))}
-                </div>
+                {!sub && (
+                  <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                    {plans.map((plan) => (
+                      <a 
+                        key={plan.key}
+                        href={`/api/admin/activate?userId=${user.id}&plan=${plan.key}`}
+                        style={{ flex: "1", minWidth: "70px", padding: "0.6rem 0.3rem", fontSize: "0.7rem", fontWeight: "600", color: "white", backgroundColor: plan.color, border: "none", borderRadius: "0.5rem", textAlign: "center", textDecoration: "none", display: "block", cursor: "pointer" }}
+                      >
+                        {plan.name}
+                      </a>
+                    ))}
+                  </div>
+                )}
                 
                 <div style={{ marginTop: "0.5rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                   {user.role !== "admin" && (
-                    <button 
-                      type="button"
-                      onClick={() => { if(confirm("确定设为管理员？")) window.location.href = `/api/admin/setadmin?userId=${user.id}`; }}
-                      style={{ padding: "0.4rem 0.8rem", fontSize: "0.75rem", fontWeight: "600", color: "white", backgroundColor: "#8b5cf6", border: "none", borderRadius: "0.5rem" }}
+                    <a 
+                      href={`/api/admin/setadmin?userId=${user.id}`}
+                      style={{ padding: "0.4rem 0.8rem", fontSize: "0.75rem", fontWeight: "600", color: "white", backgroundColor: "#8b5cf6", border: "none", borderRadius: "0.5rem", textDecoration: "none" }}
                     >
                       设为管理员
-                    </button>
+                    </a>
                   )}
-                  <button 
-                    type="button"
-                    onClick={() => { if(confirm("确定删除该用户？此操作不可恢复！")) window.location.href = `/api/admin/delete?userId=${user.id}`; }}
-                    style={{ padding: "0.4rem 0.8rem", fontSize: "0.75rem", fontWeight: "600", color: "white", backgroundColor: "#ef4444", border: "none", borderRadius: "0.5rem" }}
+                  <a 
+                    href={`/api/admin/delete?userId=${user.id}`}
+                    onClick={(e) => { if(!confirm("确定删除该用户？此操作不可恢复！")) e.preventDefault(); }}
+                    style={{ padding: "0.4rem 0.8rem", fontSize: "0.75rem", fontWeight: "600", color: "white", backgroundColor: "#ef4444", border: "none", borderRadius: "0.5rem", textDecoration: "none" }}
                   >
                     删除用户
-                  </button>
+                  </a>
                 </div>
               </div>
             );
