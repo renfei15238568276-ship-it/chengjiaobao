@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+// Full schema with validation (for client-side forms)
 export const registerSchema = z
   .object({
     username: z.string().trim().min(3, "用户名至少 3 位").max(32, "用户名别太长"),
@@ -17,4 +18,9 @@ export const registerSchema = z
     }
   });
 
-export type RegisterInput = z.infer<typeof registerSchema>;
+// API input type (no confirmPassword needed for server)
+export type RegisterInput = {
+  username: string;
+  password: string;
+  displayName: string;
+};
