@@ -2,7 +2,6 @@ import { createHash } from "crypto";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { registerSchema, type RegisterInput } from "@/lib/register-schema";
 
-
 type UserRow = {
   id: string;
   username: string;
@@ -74,70 +73,69 @@ export async function registerUserWithOrganization(input: RegisterInput) {
 export async function registerUser(input: RegisterInput) {
   const admin = getSupabaseAdmin();
 
-  const { data: existing, error: existingError } = await admin
+  const { data: existing } = await admin
     .from("users")
     .select("id")
     .eq("username", input.username)
     .limit(1)
-    .maybeSingle<{ id: string }>();
-
-  if (existingError) {
-    throw existingError;
-  }
+    .maybeSingle();
 
   if (existing?.id) {
-    return {
-      ok: false as const,
-      message: "这个用户名已经被占了，换一个。",
-    };
+    return { ok: false as const, message: "用户名已被占用" };
   }
 
-  const { data, error } = await admin
+  const { data: user, error: userError } = await admin
     .from("users")
     .insert({
       username: input.username,
       password_hash: hashPassword(input.password),
-      display_name: input.displayName,
+      display_name: input.displayName || input.username,
       role: "user",
       status: "active",
     })
     .select("id, username, display_name, role")
     .single<UserRow>();
 
-  if (error || !data) {
-    throw error ?? new Error("Failed to register user");
+  if (userError || !user) {
+    return { ok: false as const, message: "创建用户失败: " + userError?.message };
   }
+
   return {
     ok: true as const,
-    user: data,
+    user: { id: user.id, username: user.username, displayName: user.display_name || user.username },
+    organization: { id: "1", name: "默认团队" },
   };
 }
 
+// Ensure admin user exists - but don't reset password every time
 export async function ensureBuiltinAdmin() {
   const admin = getSupabaseAdmin();
-  const adminPassword = process.env.ADMIN_PASSWORD ?? "12345678";
 
-  const { error } = await admin.from("users").upsert(
-    {
+  // Check if admin exists
+  const { data: existing } = await admin
+    .from("users")
+    .select("id, username")
+    .eq("username", "admin")
+    .limit(1)
+    .maybeSingle();
+
+  // Only create if doesn't exist
+  if (!existing) {
+    const { error } = await admin.from("users").insert({
       username: "admin",
-      password_hash: hashPassword(adminPassword),
+      password_hash: hashPassword("12345678"),
       display_name: "管理员",
       role: "admin",
       status: "active",
-    },
-    { onConflict: "username" },
-  );
+    });
 
-  if (error) {
-    throw error;
+    if (error) {
+      throw error;
+    }
   }
 }
 
 export async function verifyUserLogin(username: string, password: string) {
-  if (username === "admin") {
-    await ensureBuiltinAdmin();
-  }
-
   const admin = getSupabaseAdmin();
   const { data, error } = await admin
     .from("users")
@@ -174,23 +172,68 @@ export async function listUsers() {
 
   if (error) throw error;
 
-  return ((data ?? []) as UserRow[]).map(
-    (item): UserSummary => ({
-      id: item.id,
-      username: item.username,
-      displayName: item.display_name ?? item.username,
-      role: item.role ?? "user",
-      status: item.status ?? "active",
-      createdAt: item.created_at ?? null,
-    }),
-  );
+  return (data ?? []).map((item) => ({
+    id: item.id,
+    username: item.username,
+    displayName: item.display_name ?? item.username,
+    role: item.role ?? "user",
+    status: item.status ?? "active",
+    createdAt: item.created_at ?? null,
+  }));
 }
 
 export async function changePassword(userId: string, nextPassword: string) {
-  const { error } = await getSupabaseAdmin()
+  const admin = getSupabaseAdmin();
+  const { error } = await admin
     .from("users")
     .update({ password_hash: hashPassword(nextPassword) })
     .eq("id", userId);
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
+}
+
+export async function getUserById(userId: string) {
+  const { data, error } = await getSupabaseAdmin()
+    .from("users")
+    .select("id, username, display_name, role, status, created_at")
+    .eq("id", userId)
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  return {
+    id: data.id,
+    username: data.username,
+    displayName: data.display_name ?? data.username,
+    role: data.role ?? "user",
+    status: data.status ?? "active",
+    createdAt: data.created_at ?? null,
+  };
+}
+
+export async function setUserRole(userId: string, role: string) {
+  const admin = getSupabaseAdmin();
+  const { error } = await admin
+    .from("users")
+    .update({ role })
+    .eq("id", userId);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function deleteUser(userId: string) {
+  const admin = getSupabaseAdmin();
+  const { error } = await admin
+    .from("users")
+    .delete()
+    .eq("id", userId);
+
+  if (error) {
+    throw error;
+  }
 }
