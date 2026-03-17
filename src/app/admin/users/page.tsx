@@ -66,7 +66,7 @@ export default async function AdminUsersPage() {
                   <form action={createSubscription} style={{ flex: "1", minWidth: "120px" }}>
                     <input type="hidden" name="userId" value={user.id} />
                     <button style={{ width: "100%", padding: "0.75rem", fontSize: "1rem", fontWeight: "600", color: "white", backgroundColor: "#10b981", border: "none", borderRadius: "0.5rem", cursor: "pointer" }}>
-                      开通 ¥199
+                      开通 ¥59
                     </button>
                   </form>
                   {user.role !== "admin" && (

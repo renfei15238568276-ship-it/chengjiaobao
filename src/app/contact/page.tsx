@@ -1,4 +1,17 @@
+"use client";
+
+import { useState } from "react";
+
 export default function ContactPage() {
+  const [copied, setCopied] = useState(false);
+  const wechatId = "r18974670134";
+
+  const copyWechat = () => {
+    navigator.clipboard.writeText(wechatId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <main className="min-h-screen bg-[#07111f] text-white">
       <section className="mx-auto max-w-4xl px-6 py-10 lg:px-8 lg:py-14">
@@ -13,14 +26,28 @@ export default function ContactPage() {
         <section className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-[28px] border border-white/10 bg-white/5 p-6">
             <p className="text-sm text-cyan-300">联系方式</p>
-            <h2 className="mt-2 text-2xl font-semibold">优先 Telegram 联系</h2>
+            <h2 className="mt-2 text-2xl font-semibold">加我微信开通</h2>
+            
             <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/55 px-4 py-4">
               <p className="text-sm text-white/55">微信号</p>
-              <p className="mt-1 text-xl font-medium">r18974670134</p>
+              <div className="mt-1 flex items-center justify-between">
+                <p className="text-xl font-medium">{wechatId}</p>
+                <button 
+                  onClick={copyWechat}
+                  className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-400"
+                >
+                  {copied ? "已复制 ✓" : "复制"}
+                </button>
+              </div>
             </div>
+            
             <p className="mt-4 text-sm leading-7 text-white/70">
-              建议优先通过 Telegram 联系，付款后把截图和开通信息发过来，我会尽快核对并处理。
+              复制微信后，打开微信添加好友。付款后把截图和开通信息发给我，我会尽快核对并处理。
             </p>
+            
+            <div className="mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-4 text-sm leading-7 text-emerald-200">
+              📱 复制微信 → 打开微信 → 添加朋友 → 粘贴 → 发送付款截图
+            </div>
           </div>
 
           <div className="rounded-[28px] border border-white/10 bg-white/5 p-6">
