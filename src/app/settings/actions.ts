@@ -34,21 +34,29 @@ export async function changePasswordAction(
   const supabaseUrl = "https://gdzdwwwagueplbignhxy.supabase.co";
   const serviceKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkemR3d3dhZ3VlcGxiaWduaHh5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzMxNDUwOSwiZXhwIjoyMDg4ODkwNTA5fQ.zNbc23CEjpdE1-oS2PAVDuVghCOeEyT4F_qa4vjNX8M";
 
-  const response = await fetch(`${supabaseUrl}/rest/v1/users?id=eq.${session.userId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      "apikey": serviceKey,
-      "Authorization": `Bearer ${serviceKey}`,
-    },
-    body: JSON.stringify({ password_hash: passwordHash }),
-  });
+  try {
+    const response = await fetch(`${supabaseUrl}/rest/v1/users?id=eq.${session.userId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": serviceKey,
+        "Authorization": `Bearer ${serviceKey}`,
+        "Prefer": "return=minimal",
+      },
+      body: JSON.stringify({ password_hash: passwordHash }),
+    });
 
-  if (!response.ok) {
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Password change error:", response.status, errorText);
+      return { success: false, message: `修改密码失败: ${response.status}` };
+    }
+
+    return { success: true, message: "密码已更新。" };
+  } catch (error) {
+    console.error("Password change exception:", error);
     return { success: false, message: "修改密码失败，请重试。" };
   }
-
-  return { success: true, message: "密码已更新。" };
 }
 
 async function hashPassword(password: string): Promise<string> {
