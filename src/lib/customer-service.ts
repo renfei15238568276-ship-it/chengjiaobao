@@ -80,30 +80,6 @@ function nowLabelFromDate(input: string) {
   }).format(new Date(input));
 }
 
-async function ensureAdminUser() {
-  const admin = getSupabaseAdmin();
-
-  const { error: upsertError } = await admin.from("users").upsert(
-    {
-      username: "admin",
-      password_hash: "temp-hash",
-      display_name: "管理员",
-      role: "admin",
-      status: "active",
-    },
-    { onConflict: "username" },
-  );
-
-  if (upsertError) {
-    throw upsertError;
-  }
-}
-
-async function getCurrentUserId() {
-  const session = await getCurrentSession();
-  if (session?.userId) return session.userId;
-
-  await ensureAdminUser();
 
   const { data, error } = await getSupabaseAdmin()
     .from("users")
