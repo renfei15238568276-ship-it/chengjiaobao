@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>交易风险计算器</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f1f5f9; min-height: 100vh; padding: 20px; }
+    .container { max-width: 480px; margin: 0 auto; }
+    .card { background: white; border-radius: 24px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    h1 { font-size: 24px; color: #0f172a; margin-bottom: 20px; text-align: center; }
+    .input-group { margin-bottom: 16px; }
+    label { display: block; font-size: 14px; font-weight: 500; color: #475569; margin-bottom: 6px; }
+    input { width: 100%; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 16px; font-size: 16px; outline: none; transition: border-color 0.2s; }
+    input:focus { border-color: #06b6d4; }
+    .result { margin-top: 24px; padding: 16px; background: #f8fafc; border-radius: 16px; }
+    .result-row { display: flex; justify-content: space-between; padding: 8px 0; }
+    .result-row:not(:last-child) { border-bottom: 1px solid #e2e8f0; }
+    .result-label { color: #64748b; }
+    .result-value { font-weight: 600; }
+    .loss { color: #dc2626; }
+    .profit { color: #16a34a; }
+    .safe { color: #16a34a; }
+    .warning { color: #dc2626; }
+    .alert { margin-top: 16px; padding: 12px; background: #fef2f2; border-radius: 12px; color: #dc2626; font-size: 14px; text-align: center; }
+    .disclaimer { margin-top: 20px; text-align: center; font-size: 12px; color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>🧮 交易风险计算器</h1>
+      
+      <div class="input-group">
+        <label>账户余额 ($)</label>
+        <input type="number" id="balance" value="10000" placeholder="例如: 10000">
+      </div>
+      
+      <div class="input-group">
+        <label>入场价格</label>
+        <input type="number" id="entry" placeholder="例如: 1.0850" step="0.0001">
+      </div>
+      
+      <div class="input-group">
+        <label>止损价格</label>
+        <input type="number" id="stoploss" placeholder="例如: 1.0800" step="0.0001">
+      </div>
+      
+      <div class="input-group">
+        <label>仓位大小 (手)</label>
+        <input type="number" id="lots" placeholder="例如: 1.0" step="0.01">
+      </div>
+      
+      <div class="result" id="result" style="display: none;">
+        <div class="result-row">
+          <span class="result-label">亏损金额:</span>
+          <span class="result-value loss" id="loss">-$0</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">风险比例:</span>
+          <span class="result-value" id="risk">0%</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">2%建议仓位:</span>
+          <span class="result-value safe" id="recommended">0 手</span>
+        </div>
+      </div>
+      
+      <div class="alert" id="alert" style="display: none;">
+        ⚠️ 风险超过2%，建议降低仓位
+      </div>
+      
+      <p class="disclaimer">仅供风险计算参考，不构成投资建议</p>
+    </div>
+  </div>
+
+  <script>
+    const inputs = ['balance', 'entry', 'stoploss', 'lots'];
+    inputs.forEach(id => {
+      document.getElementById(id).addEventListener('input', calculate);
+    });
+
+    function calculate() {
+      const balance = parseFloat(document.getElementById('balance').value) || 0;
+      const entry = parseFloat(document.getElementById('entry').value) || 0;
+      const sl = parseFloat(document.getElementById('stoploss').value) || 0;
+      const lots = parseFloat(document.getElementById('lots').value) || 0;
+
+      if (!entry || !sl || !lots || !balance) {
+        document.getElementById('result').style.display = 'none';
+        document.getElementById('alert').style.display = 'none';
+        return;
+      }
+
+      const priceDiff = Math.abs(entry - sl);
+      const loss = priceDiff * lots * 100;
+      const riskPercent = (loss / balance) * 100;
+      const recommendedLots = (balance * 0.02) / (priceDiff * 100);
+
+      document.getElementById('loss').textContent = '-$' + loss.toFixed(2);
+      document.getElementById('risk').textContent = riskPercent.toFixed(2) + '%';
+      document.getElementById('risk').className = 'result-value ' + (riskPercent > 2 ? 'warning' : 'safe');
+      document.getElementById('recommended').textContent = Math.max(0.01, recommendedLots).toFixed(2) + ' 手';
+      
+      document.getElementById('result').style.display = 'block';
+      document.getElementById('alert').style.display = riskPercent > 2 ? 'block' : 'none';
+    }
+  </script>
+</body>
+</html>
