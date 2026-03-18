@@ -309,3 +309,48 @@ export async function saveAiRecord(input: SaveAiRecordInput) {
 
   return mapAiHistory(data!);
 }
+
+export async function getCustomerById(id: string) {
+  return getCustomer(id);
+}
+
+export async function getDashboardHighlights() {
+  const customers = await listCustomers();
+  
+  const total = customers.length;
+  const newLeads = customers.filter(c => c.stage === "新线索").length;
+  const inProgress = customers.filter(c => ["已联系", "意向中", "报价中", "谈判中"].includes(c.stage)).length;
+  const closed = customers.filter(c => c.stage === "已成交").length;
+  
+  const totalAmount = customers.reduce((sum, c) => {
+    const num = parseFloat(c.estimatedAmount.replace(/[^0-9.]/g, "")) || 0;
+    return sum + num;
+  }, 0);
+  
+  return {
+    total,
+    newLeads,
+    inProgress,
+    closed,
+    totalAmount: `¥${totalAmount.toLocaleString("zh-CN")}`,
+  };
+}
+
+export async function exportCustomersCsv() {
+  const customers = await listCustomers();
+  
+  const headers = ["客户名", "公司", "联系方式", "来源", "阶段", "负责人", "预估金额", "创建时间"];
+  const rows = customers.map(c => [
+    c.name,
+    c.company,
+    c.contactHandle,
+    c.source,
+    c.stage,
+    c.owner,
+    c.estimatedAmountLabel,
+    c.createdAt,
+  ]);
+  
+  const csv = [headers, ...rows].map(row => row.join(",")).join("\n");
+  return csv;
+}
