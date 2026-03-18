@@ -31,7 +31,10 @@ export async function addFollowUpAction(
     };
   }
 
-  await addFollowUp(parsed.data);
+  await addFollowUp(parsed.data.customerId, {
+    type: parsed.data.type,
+    content: parsed.data.content,
+  });
   revalidatePath(`/customers/${parsed.data.customerId}`);
 
   return {
