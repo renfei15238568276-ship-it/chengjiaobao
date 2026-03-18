@@ -7,6 +7,7 @@ const nav: { href: string; label: string; adminOnly?: boolean }[] = [
   { href: "/customers", label: "客户" },
   { href: "/customers/new", label: "新建客户" },
   { href: "/ai", label: "AI 助手" },
+  { href: "/calculator", label: "计算器" },
   { href: "/pay", label: "付款开通" },
   { href: "/pricing", label: "套餐" },
   { href: "/settings/team", label: "团队" },
