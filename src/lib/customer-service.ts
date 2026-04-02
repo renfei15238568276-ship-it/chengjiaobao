@@ -332,6 +332,10 @@ export async function getDashboardHighlights() {
     newLeads,
     inProgress,
     closed,
+    totalCustomers: total,
+    hotCount: customers.filter(c => c.probability >= 70).length,
+    urgentCount: customers.filter(c => c.nextFollowUp && new Date(c.nextFollowUp) <= new Date(Date.now() + 24*60*60*1000)).length,
+    totalEstimated: totalAmount,
     totalAmount: `¥${totalAmount.toLocaleString("zh-CN")}`,
   };
 }
