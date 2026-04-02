@@ -105,6 +105,7 @@ function mapFollowUp(row: FollowUpRow): FollowUpRecord {
     type: row.type,
     content: row.content,
     createdAt: row.created_at,
+    at: row.created_at,
   };
 }
 
@@ -115,6 +116,7 @@ function mapAiHistory(row: AiHistoryRow) {
     type: row.type,
     content: row.content,
     createdAt: row.created_at,
+    at: row.created_at,
   };
 }
 
@@ -134,6 +136,7 @@ function mapCustomer(row: CustomerRow): CustomerRecord {
     tags: row.tags ?? [],
     note: row.note,
     createdAt: row.created_at,
+    at: row.created_at,
   };
 }
 
