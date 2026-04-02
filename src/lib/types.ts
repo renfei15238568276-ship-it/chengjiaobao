@@ -8,6 +8,7 @@ export type FollowUpRecord = {
 };
 
 export type CustomerRecord = {
+  at: string;
   userId: string;
   id: string;
   name: string;
