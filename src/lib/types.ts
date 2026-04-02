@@ -8,6 +8,7 @@ export type FollowUpRecord = {
 };
 
 export type CustomerRecord = {
+  userId: string;
   id: string;
   name: string;
   company: string;
