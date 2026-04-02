@@ -32,6 +32,7 @@ export async function addFollowUpAction(
   }
 
   await addFollowUp(parsed.data.customerId, {
+    customerId: parsed.data.customerId,
     type: parsed.data.type,
     content: parsed.data.content,
   });
