@@ -37,6 +37,6 @@ export async function updateCustomerAction(
     };
   }
 
-  await updateCustomer(parsed.data);
+  await updateCustomer(parsed.data.id, parsed.data);
   redirect(`/customers/${parsed.data.id}`);
 }
