@@ -1,4 +1,5 @@
 export type FollowUpRecord = {
+  customerId: string;
   id: string;
   at: string;
   type: string;
